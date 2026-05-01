@@ -26,7 +26,7 @@ db.serialize(() => {
 /* ================= GET ================= */
 app.get("/tickets", (req, res) => {
   db.all("SELECT * FROM tickets ORDER BY id DESC", [], (err, rows) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
@@ -38,9 +38,9 @@ app.post("/tickets", (req, res) => {
   db.run(
     `INSERT INTO tickets (title, description, priority, status, technician, comments)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [title, description, priority, "abierto", technician, comments],
+    [title, description, priority, "abierto", technician || "", comments || ""],
     function (err) {
-      if (err) return res.status(500).json(err);
+      if (err) return res.status(500).json({ error: err.message });
 
       res.json({
         id: this.lastID,
@@ -55,7 +55,7 @@ app.post("/tickets", (req, res) => {
   );
 });
 
-/* ================= CAMBIAR ESTADO ================= */
+/* ================= STATUS ================= */
 app.put("/tickets/:id/status", (req, res) => {
   const id = req.params.id;
   const { status } = req.body;
@@ -64,7 +64,7 @@ app.put("/tickets/:id/status", (req, res) => {
     "UPDATE tickets SET status = ? WHERE id = ?",
     [status, id],
     function (err) {
-      if (err) return res.status(500).json(err);
+      if (err) return res.status(500).json({ error: err.message });
 
       res.json({ ok: true });
     }
@@ -72,6 +72,8 @@ app.put("/tickets/:id/status", (req, res) => {
 });
 
 /* ================= START ================= */
-app.listen(3001, () => {
-  console.log("Ticket service corriendo en http://localhost:3001");
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log("Ticket Service OK en puerto", PORT);
 });
