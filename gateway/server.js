@@ -8,13 +8,13 @@ app.use(cors());
 app.use(express.json());
 
 /* ===============================
-   VARIABLES (PRODUCCIÓN)
+   VARIABLES
 ================================ */
 const TICKET_URL = process.env.TICKET_URL;
 const BI_URL = process.env.BI_URL;
 
 /* ===============================
-   LOGIN DEMO
+   LOGIN
 ================================ */
 app.post("/login",(req,res)=>{
   const { email, password } = req.body;
@@ -23,27 +23,22 @@ app.post("/login",(req,res)=>{
     return res.status(401).json({error:"credenciales incorrectas"});
   }
 
-  if(email === "admin@test.com"){
-    return res.json({ email, role:"admin" });
-  }
+  const roles = {
+    "admin@test.com":"admin",
+    "tec@test.com":"tecnico",
+    "bi@test.com":"bi",
+    "gerencia@test.com":"gerencia"
+  };
 
-  if(email === "tec@test.com"){
-    return res.json({ email, role:"tecnico" });
-  }
-
-  if(email === "bi@test.com"){
-    return res.json({ email, role:"bi" });
-  }
-
-  if(email === "gerencia@test.com"){
-    return res.json({ email, role:"gerencia" });
+  if(roles[email]){
+    return res.json({ email, role:roles[email] });
   }
 
   res.status(401).json({error:"usuario no existe"});
 });
 
 /* ===============================
-   TICKETS (PROXY)
+   TICKETS
 ================================ */
 app.get("/tickets", async (req,res)=>{
   const r = await axios.get(`${TICKET_URL}/tickets`);
@@ -61,7 +56,7 @@ app.put("/tickets/:id/close", async (req,res)=>{
 });
 
 /* ===============================
-   BI (PROXY)
+   BI
 ================================ */
 app.get("/bi/kpis", async (req,res)=>{
   const r = await axios.get(`${BI_URL}/bi/kpis`);
@@ -89,12 +84,17 @@ app.get("/bi/sla", async (req,res)=>{
 });
 
 /* ===============================
-   FRONTEND
+   FRONTEND (FIX CLAVE)
 ================================ */
-app.use(express.static(path.join(__dirname,"../frontend/dist")));
 
-app.use((req,res)=>{
-  res.sendFile(path.join(__dirname,"../frontend/dist/index.html"));
+// Ruta correcta al dist desde gateway
+const frontendPath = path.join(__dirname, "../frontend/dist");
+
+app.use(express.static(frontendPath));
+
+// fallback SPA
+app.get("*",(req,res)=>{
+  res.sendFile(path.join(frontendPath,"index.html"));
 });
 
 /* =============================== */
