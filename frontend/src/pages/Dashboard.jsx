@@ -2,108 +2,67 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 import { Bar, Doughnut } from "react-chartjs-2";
 import Chart from "chart.js/auto";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 export default function Dashboard(){
 
   const [kpis,setKpis] = useState({});
-  const [mttr,setMttr] = useState(0);
   const [prioridad,setPrioridad] = useState([]);
   const [tecnicos,setTecnicos] = useState([]);
-  const [sla,setSla] = useState([]);
 
   useEffect(()=>{ load(); },[]);
 
   const load = async ()=>{
     const k = await API.get("/bi/kpis");
-    const m = await API.get("/bi/mttr");
     const p = await API.get("/bi/prioridad");
     const t = await API.get("/bi/tecnicos");
-    const s = await API.get("/bi/sla");
 
     setKpis(k.data);
-    setMttr(m.data.mttr);
     setPrioridad(p.data);
     setTecnicos(t.data);
-    setSla(s.data);
   };
 
-  /* EXPORT */
-  const exportBI = ()=>{
-    const wb = XLSX.utils.book_new();
+  const prioridadChart = {
+    labels: prioridad.map(x=>x.priority),
+    datasets:[{ data: prioridad.map(x=>x.total) }]
+  };
 
-    XLSX.utils.book_append_sheet(wb,
-      XLSX.utils.json_to_sheet(prioridad),"Prioridad");
-
-    XLSX.utils.book_append_sheet(wb,
-      XLSX.utils.json_to_sheet(tecnicos),"Tecnicos");
-
-    XLSX.utils.book_append_sheet(wb,
-      XLSX.utils.json_to_sheet(sla),"SLA");
-
-    const file = XLSX.write(wb,{ bookType:"xlsx", type:"array" });
-    saveAs(new Blob([file]), "bi_final.xlsx");
+  const tecnicoChart = {
+    labels: tecnicos.map(x=>x.tecnico),
+    datasets:[{ data: tecnicos.map(x=>x.total) }]
   };
 
   return (
-    <div>
+    <div style={{background:"#0f172a",color:"#fff",minHeight:"100vh",padding:20}}>
+      <h1>Dashboard Ejecutivo</h1>
 
-      <h1 style={{color:"#fff"}}>📊 Dashboard Ejecutivo</h1>
+      <div style={{display:"flex",gap:20}}>
+        <div style={{background:"#1e293b",padding:20}}>
+          <h3>Total</h3>
+          <h2>{kpis.total}</h2>
+        </div>
 
-      {/* KPIs */}
-      <div style={grid4}>
-        <KPI title="Total" value={kpis.total}/>
-        <KPI title="Abiertos" value={kpis.abiertos}/>
-        <KPI title="Cerrados" value={kpis.cerrados}/>
-        <KPI title="MTTR" value={mttr}/>
+        <div style={{background:"#1e293b",padding:20}}>
+          <h3>Abiertos</h3>
+          <h2>{kpis.abiertos}</h2>
+        </div>
+
+        <div style={{background:"#1e293b",padding:20}}>
+          <h3>Cerrados</h3>
+          <h2>{kpis.cerrados}</h2>
+        </div>
       </div>
 
-      <button onClick={exportBI}>Exportar BI</button>
+      <div style={{display:"flex",marginTop:30,gap:40}}>
+        <div style={{width:300}}>
+          <h3>Prioridad</h3>
+          <Doughnut data={prioridadChart}/>
+        </div>
 
-      {/* GRAFICOS */}
-      <div style={grid2}>
-
-        <Card title="Prioridad">
-          <Bar data={{
-            labels: prioridad.map(x=>x.priority),
-            datasets:[{ data: prioridad.map(x=>x.total) }]
-          }}/>
-        </Card>
-
-        <Card title="Técnicos">
-          <Bar data={{
-            labels: tecnicos.map(x=>x.tecnico),
-            datasets:[{ data: tecnicos.map(x=>x.total) }]
-          }}/>
-        </Card>
-
+        <div style={{width:400}}>
+          <h3>Tickets por técnico</h3>
+          <Bar data={tecnicoChart}/>
+        </div>
       </div>
-
-      <Card title="SLA">
-        <Doughnut data={{
-          labels: sla.map(x=>x.estado),
-          datasets:[{ data: sla.map(x=>x.total) }]
-        }}/>
-      </Card>
-
     </div>
   );
 }
-
-/* COMPONENTES */
-
-function KPI({title,value}){
-  return <div style={kpi}><p>{title}</p><h2>{value}</h2></div>;
-}
-
-function Card({title,children}){
-  return <div style={card}><h3>{title}</h3>{children}</div>;
-}
-
-/* ESTILOS */
-
-const grid4={display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:20};
-const grid2={display:"grid",gridTemplateColumns:"1fr 1fr",gap:20};
-const kpi={background:"#1e293b",padding:20,color:"#fff"};
-const card={background:"#1e293b",padding:20,color:"#fff",marginTop:20};

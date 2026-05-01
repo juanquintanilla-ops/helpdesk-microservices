@@ -1,7 +1,17 @@
 import axios from "axios";
 
+/*
+✔ En producción (Render):
+  usa misma URL del navegador → "" (vacío)
+
+✔ En local:
+  usa localhost
+*/
+
 const API = axios.create({
-  baseURL: "https://helpdesk-app-b2ae.onrender.com"
+  baseURL: window.location.hostname.includes("localhost")
+    ? "http://localhost:3000"
+    : ""
 });
 
 export default API;
