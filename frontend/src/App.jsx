@@ -2,24 +2,29 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Tickets from "./pages/Tickets";
-import Layout from "./components/Layout";
+import MainLayout from "./layout/MainLayout";
 
 export default function App(){
   return (
     <BrowserRouter>
-      <Routes>
 
+      <Routes>
         <Route path="/" element={<Login/>} />
 
         <Route path="/dashboard" element={
-          <Layout><Dashboard/></Layout>
+          <MainLayout>
+            <Dashboard/>
+          </MainLayout>
         }/>
 
         <Route path="/tickets" element={
-          <Layout><Tickets/></Layout>
+          <MainLayout>
+            <Tickets/>
+          </MainLayout>
         }/>
 
       </Routes>
+
     </BrowserRouter>
   );
 }

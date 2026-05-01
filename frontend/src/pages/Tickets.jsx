@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 export default function Tickets(){
 
@@ -17,13 +15,7 @@ export default function Tickets(){
   useEffect(()=>{ load(); },[]);
 
   const create = async ()=>{
-    if(!title) return alert("Escribe un título");
-
-    await API.post("/tickets",{
-      title,
-      priority
-    });
-
+    await API.post("/tickets",{ title, priority });
     setTitle("");
     load();
   };
@@ -33,53 +25,34 @@ export default function Tickets(){
     load();
   };
 
-  const exportExcel = ()=>{
-    const ws = XLSX.utils.json_to_sheet(tickets);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Tickets");
-
-    const file = XLSX.write(wb,{ bookType:"xlsx", type:"array" });
-    saveAs(new Blob([file]), "tickets.xlsx");
-  };
-
   return (
-    <div style={{padding:20,background:"#0f172a",color:"#fff",minHeight:"100vh"}}>
-      <h1>Gestión de Tickets</h1>
+    <div>
 
-      <div style={{marginBottom:20}}>
-        <input
-          placeholder="Título"
-          value={title}
-          onChange={e=>setTitle(e.target.value)}
-          style={{padding:8,marginRight:10}}
-        />
+      <h2>Gestión de Tickets</h2>
 
-        <select
-          value={priority}
-          onChange={e=>setPriority(e.target.value)}
-        >
+      {/* CREAR */}
+      <div style={card}>
+        <input placeholder="Título" value={title}
+          onChange={e=>setTitle(e.target.value)} />
+
+        <select value={priority} onChange={e=>setPriority(e.target.value)}>
           <option value="alta">Alta</option>
           <option value="media">Media</option>
           <option value="baja">Baja</option>
         </select>
 
-        <button onClick={create} style={{marginLeft:10}}>
-          Crear
-        </button>
-
-        <button onClick={exportExcel} style={{marginLeft:10}}>
-          Excel
-        </button>
+        <button onClick={create}>Crear Ticket</button>
       </div>
 
-      <table style={{width:"100%",background:"#1e293b"}}>
+      {/* TABLA */}
+      <table style={table}>
         <thead>
           <tr>
             <th>ID</th>
             <th>Título</th>
             <th>Estado</th>
             <th>Prioridad</th>
-            <th></th>
+            <th>Acción</th>
           </tr>
         </thead>
 
@@ -88,8 +61,19 @@ export default function Tickets(){
             <tr key={t.id}>
               <td>{t.id}</td>
               <td>{t.title}</td>
-              <td>{t.status}</td>
-              <td>{t.priority}</td>
+
+              <td>
+                <span style={badgeStatus(t.status)}>
+                  {t.status}
+                </span>
+              </td>
+
+              <td>
+                <span style={badgePriority(t.priority)}>
+                  {t.priority}
+                </span>
+              </td>
+
               <td>
                 {t.status !== "cerrado" && (
                   <button onClick={()=>closeTicket(t.id)}>
@@ -101,6 +85,38 @@ export default function Tickets(){
           ))}
         </tbody>
       </table>
+
     </div>
   );
 }
+
+/* ===== STYLES ===== */
+
+const card = {
+  background:"#020617",
+  padding:15,
+  marginBottom:20,
+  display:"flex",
+  gap:10
+};
+
+const table = {
+  width:"100%",
+  background:"#020617"
+};
+
+const badgeStatus = (s)=>({
+  padding:"4px 8px",
+  borderRadius:6,
+  background:
+    s==="cerrado" ? "#16a34a" :
+    s==="abierto" ? "#f59e0b" : "#3b82f6"
+});
+
+const badgePriority = (p)=>({
+  padding:"4px 8px",
+  borderRadius:6,
+  background:
+    p==="alta" ? "#dc2626" :
+    p==="media" ? "#f59e0b" : "#22c55e"
+});
