@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import Tickets from "./pages/Tickets";
+import Dashboard from "./pages/Dashboard";
 
 function getUser(){
   try{
@@ -37,6 +38,7 @@ export default function App(){
         <Routes>
           <Route path="/" element={<Navigate to="/tickets"/>}/>
           <Route path="/tickets" element={<Tickets/>}/>
+          <Route path="/dashboard" element={<Dashboard/>}/>
         </Routes>
       </MainLayout>
     </BrowserRouter>

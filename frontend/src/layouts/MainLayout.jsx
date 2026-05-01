@@ -12,7 +12,6 @@ export default function MainLayout({ children }){
   return (
     <div style={layout}>
 
-      {/* SIDEBAR */}
       <div style={sidebar}>
 
         <h2 style={logo}>NEXUS PRO</h2>
@@ -21,13 +20,16 @@ export default function MainLayout({ children }){
           Tickets
         </button>
 
+        <button style={btn} onClick={()=>navigate("/dashboard")}>
+          Dashboard BI
+        </button>
+
         <button style={logoutBtn} onClick={logout}>
           Logout
         </button>
 
       </div>
 
-      {/* CONTENIDO */}
       <div style={content}>
         {children}
       </div>
@@ -35,8 +37,6 @@ export default function MainLayout({ children }){
     </div>
   );
 }
-
-/* ===== ESTILOS ===== */
 
 const layout = {
   display:"flex",
@@ -54,10 +54,7 @@ const sidebar = {
   gap:10
 };
 
-const logo = {
-  color:"#fff",
-  marginBottom:20
-};
+const logo = {color:"#fff", marginBottom:20};
 
 const btn = {
   padding:10,
