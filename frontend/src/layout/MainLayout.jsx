@@ -12,7 +12,7 @@ export default function MainLayout({ children }){
         padding:20,
         borderRight:"1px solid #1f2937"
       }}>
-        <h2 style={{marginBottom:30}}>HelpDesk Pro</h2>
+        <h2 style={{marginBottom:30}}>NEXUS PRO</h2>
 
         <Link to="/dashboard" style={link}>📊 Dashboard</Link>
         <Link to="/tickets" style={link}>🎫 Tickets</Link>
