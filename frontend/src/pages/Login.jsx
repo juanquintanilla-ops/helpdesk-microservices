@@ -24,16 +24,12 @@ export default function Login(){
       <div style={card}>
         <h2>NEXUS PRO</h2>
 
-        <input
-          style={input}
-          placeholder="Correo"
+        <input style={input} placeholder="Correo"
           value={email}
           onChange={e=>setEmail(e.target.value)}
         />
 
-        <input
-          style={input}
-          type="password"
+        <input style={input} type="password"
           placeholder="Contraseña"
           value={password}
           onChange={e=>setPassword(e.target.value)}
@@ -42,16 +38,11 @@ export default function Login(){
         <button style={btn} onClick={login}>
           Ingresar
         </button>
-
-        <p style={{fontSize:12}}>
-          admin@test.com / 123456
-        </p>
       </div>
     </div>
   );
 }
 
-/* estilos */
 const container = {
   height:"100vh",
   display:"flex",
@@ -84,6 +75,5 @@ const btn = {
   background:"#2563eb",
   color:"#fff",
   border:"none",
-  borderRadius:8,
-  cursor:"pointer"
+  borderRadius:8
 };
