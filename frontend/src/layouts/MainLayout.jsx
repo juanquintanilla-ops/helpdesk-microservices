@@ -1,27 +1,37 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function MainLayout({ children }){
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const logout = ()=>{
     localStorage.removeItem("user");
-    window.location.reload();
+    window.location.href = "/login";
   };
+
+  const isActive = (path)=> location.pathname === path;
 
   return (
     <div style={layout}>
 
+      {/* SIDEBAR */}
       <div style={sidebar}>
 
         <h2 style={logo}>NEXUS PRO</h2>
 
-        <button style={btn} onClick={()=>navigate("/tickets")}>
+        <button
+          style={isActive("/tickets") ? btnActive : btn}
+          onClick={()=>navigate("/tickets")}
+        >
           Tickets
         </button>
 
-        <button style={btn} onClick={()=>navigate("/dashboard")}>
-          Dashboard BI
+        <button
+          style={isActive("/dashboard") ? btnActive : btn}
+          onClick={()=>navigate("/dashboard")}
+        >
+          Dashboard
         </button>
 
         <button style={logoutBtn} onClick={logout}>
@@ -30,6 +40,7 @@ export default function MainLayout({ children }){
 
       </div>
 
+      {/* CONTENIDO */}
       <div style={content}>
         {children}
       </div>
@@ -38,6 +49,8 @@ export default function MainLayout({ children }){
   );
 }
 
+/* ================= ESTILOS ================= */
+
 const layout = {
   display:"flex",
   minHeight:"100vh",
@@ -45,7 +58,7 @@ const layout = {
 };
 
 const sidebar = {
-  width:220,
+  width:240,
   background:"#020617",
   borderRight:"1px solid #1f2937",
   padding:20,
@@ -54,20 +67,30 @@ const sidebar = {
   gap:10
 };
 
-const logo = {color:"#fff", marginBottom:20};
+const logo = {
+  color:"#fff",
+  marginBottom:20
+};
 
 const btn = {
-  padding:10,
-  background:"#2563eb",
-  color:"#fff",
+  padding:12,
+  background:"#1f2937",
+  color:"#e5e7eb",
   border:"none",
   borderRadius:8,
-  cursor:"pointer"
+  cursor:"pointer",
+  textAlign:"left"
+};
+
+const btnActive = {
+  ...btn,
+  background:"#2563eb",
+  color:"#fff"
 };
 
 const logoutBtn = {
   marginTop:"auto",
-  padding:10,
+  padding:12,
   background:"#dc2626",
   color:"#fff",
   border:"none",
@@ -77,6 +100,6 @@ const logoutBtn = {
 
 const content = {
   flex:1,
-  padding:20,
-  color:"#fff"
+  padding:25,
+  color:"#e5e7eb"
 };

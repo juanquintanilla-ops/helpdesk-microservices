@@ -8,43 +8,82 @@ export default function Login(){
 
   const login = async ()=>{
     try{
-      const res = await API.post("/login",{ email, password });
+      const res = await API.post("/login",{email,password});
 
       localStorage.setItem("user", JSON.stringify(res.data));
 
-      window.location.href = "/dashboard";
+      window.location.href = "/tickets";
 
     }catch{
-      alert("Error de login");
+      alert("Credenciales incorrectas");
     }
   };
 
   return (
-    <div style={{padding:50}}>
+    <div style={container}>
+      <div style={card}>
+        <h2>NEXUS PRO</h2>
 
-      <h2>Login</h2>
+        <input
+          style={input}
+          placeholder="Correo"
+          value={email}
+          onChange={e=>setEmail(e.target.value)}
+        />
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={e=>setEmail(e.target.value)}
-      />
+        <input
+          style={input}
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={e=>setPassword(e.target.value)}
+        />
 
-      <br/><br/>
+        <button style={btn} onClick={login}>
+          Ingresar
+        </button>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={e=>setPassword(e.target.value)}
-      />
-
-      <br/><br/>
-
-      <button onClick={login}>
-        Ingresar
-      </button>
-
+        <p style={{fontSize:12}}>
+          admin@test.com / 123456
+        </p>
+      </div>
     </div>
   );
 }
+
+/* estilos */
+const container = {
+  height:"100vh",
+  display:"flex",
+  justifyContent:"center",
+  alignItems:"center",
+  background:"#020617"
+};
+
+const card = {
+  background:"#111827",
+  padding:30,
+  borderRadius:12,
+  display:"flex",
+  flexDirection:"column",
+  gap:10,
+  width:300,
+  color:"#fff"
+};
+
+const input = {
+  padding:10,
+  borderRadius:8,
+  border:"1px solid #1f2937",
+  background:"#020617",
+  color:"#fff"
+};
+
+const btn = {
+  padding:10,
+  background:"#2563eb",
+  color:"#fff",
+  border:"none",
+  borderRadius:8,
+  cursor:"pointer"
+};
