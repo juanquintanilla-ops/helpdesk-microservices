@@ -6,48 +6,44 @@ import Chart from "chart.js/auto";
 export default function Dashboard(){
 
   const [kpis,setKpis] = useState({});
-  const [prioridad,setPrioridad] = useState([]);
+  const [data,setData] = useState([]);
 
-  useEffect(()=>{ load(); },[]);
+  useEffect(()=>{
+    load();
+  },[]);
 
   const load = async ()=>{
     const k = await API.get("/bi/kpis");
     const p = await API.get("/bi/prioridad");
 
     setKpis(k.data);
-    setPrioridad(p.data);
+    setData(p.data);
   };
 
   return (
-    <div>
+    <div style={{color:"#fff"}}>
 
       <h2>Dashboard Ejecutivo</h2>
 
-      {/* KPIs */}
       <div style={{display:"flex",gap:20}}>
-
         <Card title="Total" value={kpis.total}/>
         <Card title="Abiertos" value={kpis.abiertos}/>
         <Card title="Cerrados" value={kpis.cerrados}/>
-
       </div>
 
-      {/* GRÁFICOS */}
-      <div style={{display:"flex",marginTop:30,gap:30}}>
+      <div style={{display:"flex",gap:40,marginTop:30}}>
 
-        <div style={chartCard}>
-          <h3>Prioridad</h3>
+        <div style={chart}>
           <Doughnut data={{
-            labels: prioridad.map(x=>x.priority),
-            datasets:[{ data: prioridad.map(x=>x.total) }]
+            labels:data.map(x=>x.priority),
+            datasets:[{data:data.map(x=>x.total)}]
           }}/>
         </div>
 
-        <div style={chartCard}>
-          <h3>Distribución</h3>
+        <div style={chart}>
           <Bar data={{
-            labels: prioridad.map(x=>x.priority),
-            datasets:[{ data: prioridad.map(x=>x.total) }]
+            labels:data.map(x=>x.priority),
+            datasets:[{data:data.map(x=>x.total)}]
           }}/>
         </div>
 
@@ -57,12 +53,10 @@ export default function Dashboard(){
   );
 }
 
-/* ===== COMPONENTES ===== */
-
 function Card({title,value}){
   return (
     <div style={{
-      background:"#020617",
+      background:"#111827",
       padding:20,
       width:200
     }}>
@@ -72,8 +66,4 @@ function Card({title,value}){
   );
 }
 
-const chartCard = {
-  background:"#020617",
-  padding:20,
-  width:400
-};
+const chart = {background:"#111827",padding:20,width:400};
