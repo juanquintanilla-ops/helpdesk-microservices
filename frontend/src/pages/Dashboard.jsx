@@ -5,73 +5,68 @@ import Chart from "chart.js/auto";
 
 export default function Dashboard(){
 
-  const [role,setRole] = useState("");
   const [data,setData] = useState([]);
+  const [kpis,setKpis] = useState({});
+  const [mttr,setMttr] = useState(0);
 
   useEffect(()=>{
-
-    const raw = localStorage.getItem("user");
-
-    // 🔴 VALIDACIÓN CLAVE
-    if(!raw || raw === "undefined"){
-      window.location.href = "/";
-      return;
-    }
-
-    let user;
-
-    try{
-      user = JSON.parse(raw);
-    }catch(e){
-      console.error("Error parsing user:", e);
-      window.location.href = "/";
-      return;
-    }
-
-    setRole(user.role);
-    loadData(user);
-
+    load();
   },[]);
 
-  const loadData = async (user)=>{
+  const load = async ()=>{
     try{
+      const k = await API.get("/bi/kpis");
+      const m = await API.get("/bi/mttr");
+      const c = await API.get("/bi/coordinador");
 
-      if(user.role === "admin"){
-        const res = await API.get("/bi/coordinador");
-        setData(Array.isArray(res.data) ? res.data : []);
-      } else {
-        setData([]);
-      }
+      setKpis(k.data || {});
+      setMttr(m.data?.mttr || 0);
+      setData(c.data || []);
 
     }catch(e){
       console.error(e);
-      setData([]);
     }
   };
 
   const chartData = {
-    labels: data.map(x => x?.status || "N/A"),
-    datasets: [{
-      label: "Tickets",
-      data: data.map(x => x?.total || 0)
+    labels: data.map(x=>x.status),
+    datasets:[{
+      label:"Tickets",
+      data: data.map(x=>x.total)
     }]
   };
 
   return (
     <div>
 
-      <h1 style={{color:"#fff"}}>Dashboard ({role})</h1>
+      <h1 style={{color:"#fff"}}>Centro de Control</h1>
 
-      {data.length === 0 ? (
-        <p style={{color:"#ccc"}}>
-          No hay datos aún. Ve a Tickets.
-        </p>
-      ) : (
-        <div style={{background:"#1e293b", padding:20}}>
-          <Bar data={chartData}/>
-        </div>
+      <div style={{display:"flex", gap:20}}>
+        <Card title="Total" value={kpis.total}/>
+        <Card title="Abiertos" value={kpis.abiertos}/>
+        <Card title="Cerrados" value={kpis.cerrados}/>
+        <Card title="MTTR" value={mttr}/>
+      </div>
+
+      <br/>
+
+      {data.length > 0 && (
+        <Bar data={chartData}/>
       )}
 
+    </div>
+  );
+}
+
+function Card({title,value}){
+  return (
+    <div style={{
+      background:"#1e293b",
+      padding:20,
+      color:"#fff"
+    }}>
+      <p>{title}</p>
+      <h2>{value}</h2>
     </div>
   );
 }

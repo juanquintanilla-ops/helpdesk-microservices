@@ -10,22 +10,11 @@ export default function Login(){
     try{
       const res = await API.post("/login",{ email, password });
 
-      // 🔴 VALIDAR QUE SÍ VIENE DATA
-      if(!res.data || !res.data.role){
-        alert("Respuesta inválida del servidor");
-        return;
-      }
-
-      // 🔴 GUARDADO CORRECTO
       localStorage.setItem("user", JSON.stringify(res.data));
-
-      // 🔴 VERIFICACIÓN (IMPORTANTE)
-      console.log("USER GUARDADO:", res.data);
 
       window.location.href = "/dashboard";
 
-    }catch(e){
-      console.error(e);
+    }catch{
       alert("Error de login");
     }
   };

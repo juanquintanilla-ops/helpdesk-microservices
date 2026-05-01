@@ -16,8 +16,14 @@ export default function Tickets(){
   useEffect(()=>{ load(); },[]);
 
   const create = async ()=>{
+    if(!title) return;
     await API.post("/tickets",{ title });
     setTitle("");
+    load();
+  };
+
+  const closeTicket = async (id)=>{
+    await API.put(`/tickets/${id}/close`);
     load();
   };
 
@@ -33,26 +39,26 @@ export default function Tickets(){
   return (
     <div>
 
-      <h2 style={{color:"#fff"}}>Tickets</h2>
+      <h2 style={{color:"#fff"}}>Gestión de Tickets</h2>
 
-      {/* CREAR */}
       <div style={{marginBottom:20}}>
         <input
           placeholder="Título"
           value={title}
           onChange={e=>setTitle(e.target.value)}
         />
+
         <button onClick={create}>Crear</button>
-        <button onClick={exportExcel}>Exportar</button>
+        <button onClick={exportExcel}>Exportar Excel</button>
       </div>
 
-      {/* TABLA */}
-      <table style={{width:"100%", background:"#1e293b", color:"#fff"}}>
+      <table style={{width:"100%", color:"#fff"}}>
         <thead>
           <tr>
             <th>ID</th>
             <th>Título</th>
             <th>Estado</th>
+            <th></th>
           </tr>
         </thead>
 
@@ -62,6 +68,13 @@ export default function Tickets(){
               <td>{t.id}</td>
               <td>{t.title}</td>
               <td>{t.status}</td>
+              <td>
+                {t.status !== "cerrado" && (
+                  <button onClick={()=>closeTicket(t.id)}>
+                    Cerrar
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

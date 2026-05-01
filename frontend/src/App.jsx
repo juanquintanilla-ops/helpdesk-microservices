@@ -12,15 +12,11 @@ export default function App(){
         <Route path="/" element={<Login/>} />
 
         <Route path="/dashboard" element={
-          <Layout>
-            <Dashboard/>
-          </Layout>
+          <Layout><Dashboard/></Layout>
         }/>
 
         <Route path="/tickets" element={
-          <Layout>
-            <Tickets/>
-          </Layout>
+          <Layout><Tickets/></Layout>
         }/>
 
       </Routes>

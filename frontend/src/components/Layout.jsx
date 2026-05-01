@@ -12,12 +12,16 @@ export default function Layout({ children }) {
 
       {/* SIDEBAR */}
       <div style={{
-        width:220,
-        background:"#111827",
+        width:240,
+        background:"#020617",
         color:"#fff",
         padding:20
       }}>
-        <h2>Helpdesk</h2>
+        <h2 style={{color:"#22c55e"}}>HELPDESK PRO</h2>
+
+        <p style={{fontSize:12, color:"#94a3b8"}}>
+          Microservicios + BI
+        </p>
 
         <div style={{marginTop:30}}>
           <Link to="/dashboard" style={link}>Dashboard</Link>
