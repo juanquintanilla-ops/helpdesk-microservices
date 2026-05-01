@@ -1,8 +1,6 @@
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import { Bar, Line } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 
 export default function Dashboard(){
@@ -12,17 +10,9 @@ export default function Dashboard(){
   const [kpis,setKpis] = useState({});
   const [mttr,setMttr] = useState(0);
 
-  const exportBI = ()=>{
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "BI");
-
-    const file = XLSX.write(wb,{ bookType:"xlsx", type:"array" });
-    saveAs(new Blob([file]), "bi.xlsx");
-  };
-
   useEffect(()=>{
     const user = JSON.parse(localStorage.getItem("user"));
+
     if(!user){
       window.location.href="/";
       return;
@@ -67,30 +57,46 @@ export default function Dashboard(){
   };
 
   return (
-    <div style={{padding:20}}>
-      <h1>Dashboard ({role})</h1>
+    <div>
 
-      {/* BOTONES CORRECTAMENTE UBICADOS */}
-      <button onClick={()=>window.location.href="/tickets"}>
-        Ir a Tickets
-      </button>
+      <h1 style={{color:"#fff"}}>Dashboard ({role})</h1>
 
-      <button onClick={exportBI}>
-        Descargar BI en Excel
-      </button>
+      {/* KPIs */}
+      <div style={{display:"flex", gap:20, marginBottom:20}}>
 
-      {role === "tecnico" && <Bar data={chartData}/>}
-      {role === "admin" && <Bar data={chartData}/>}
-      {role === "gerencia" && <Line data={chartData}/>}
+        <Card title="Total" value={kpis.total || 0}/>
+        <Card title="Abiertos" value={kpis.abiertos || 0}/>
+        <Card title="Cerrados" value={kpis.cerrados || 0}/>
+        <Card title="MTTR" value={mttr}/>
 
-      {role === "bi" && (
-        <>
-          <p>Total: {kpis.total}</p>
-          <p>Abiertos: {kpis.abiertos}</p>
-          <p>Cerrados: {kpis.cerrados}</p>
-          <p>MTTR: {mttr}</p>
-        </>
+      </div>
+
+      {/* GRÁFICO */}
+      {data.length > 0 ? (
+        <div style={{background:"#1e293b", padding:20, borderRadius:10}}>
+          <Bar data={chartData}/>
+        </div>
+      ) : (
+        <p style={{color:"#94a3b8"}}>
+          No hay datos aún. Ve a Tickets.
+        </p>
       )}
+
+    </div>
+  );
+}
+
+function Card({title, value}){
+  return (
+    <div style={{
+      background:"#1e293b",
+      padding:20,
+      borderRadius:10,
+      color:"#fff",
+      minWidth:120
+    }}>
+      <p>{title}</p>
+      <h2>{value}</h2>
     </div>
   );
 }
