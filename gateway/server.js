@@ -6,12 +6,11 @@ const app = express();
 app.use(express.json());
 
 const TICKET_URL = process.env.TICKET_URL;
+const BI_URL = process.env.BI_URL;
 
 /* ================= LOGIN ================= */
-app.post("/api/login", (req,res)=>{
+app.post("/api/login",(req,res)=>{
   const { email, password } = req.body;
-
-  console.log("LOGIN:", email, password); // DEBUG
 
   if(password === "123456"){
     return res.json({ email, role:"admin" });
@@ -20,7 +19,7 @@ app.post("/api/login", (req,res)=>{
   return res.status(401).json({error:"bad"});
 });
 
-/* ================= API ================= */
+/* ================= TICKETS ================= */
 app.get("/api/tickets", async (req,res)=>{
   const r = await axios.get(`${TICKET_URL}/tickets`);
   res.json(r.data);
@@ -39,16 +38,32 @@ app.put("/api/tickets/:id/status", async (req,res)=>{
   res.json(r.data);
 });
 
+/* ================= BI ================= */
+app.get("/api/bi/etl", async (req,res)=>{
+  const r = await axios.get(`${BI_URL}/bi/etl`);
+  res.json(r.data);
+});
+
+app.get("/api/bi/kpis", async (req,res)=>{
+  const r = await axios.get(`${BI_URL}/bi/kpis`);
+  res.json(r.data);
+});
+
+app.get("/api/bi/prediccion", async (req,res)=>{
+  const r = await axios.get(`${BI_URL}/bi/prediccion`);
+  res.json(r.data);
+});
+
 /* ================= FRONTEND ================= */
 const distPath = path.join(__dirname, "../frontend/dist");
 
 app.use(express.static(distPath));
 
-app.get("*", (req,res)=>{
-  res.sendFile(path.join(distPath, "index.html"));
+app.get("*",(req,res)=>{
+  res.sendFile(path.join(distPath,"index.html"));
 });
 
 /* ================= START ================= */
 app.listen(process.env.PORT || 10000, ()=>{
-  console.log("Gateway OK");
+  console.log("Gateway corriendo");
 });
