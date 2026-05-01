@@ -1,46 +1,62 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-const db = new sqlite3.Database("./db.sqlite");
+let tickets = [];
+let id = 1;
 
-db.run(`CREATE TABLE IF NOT EXISTS tickets(
- id INTEGER PRIMARY KEY,
- title TEXT,
- status TEXT,
- priority TEXT,
- assigned_to TEXT,
- created_at TEXT,
- closed_at TEXT
-)`);
-
-app.get("/tickets",(req,res)=>{
- db.all("SELECT * FROM tickets",[],(e,r)=>res.json(r));
-});
-
+/* CREAR */
 app.post("/tickets",(req,res)=>{
- const now = new Date().toISOString();
+  const ticket = {
+    id: id++,
+    title: req.body.title,
+    status: "abierto",
+    priority: req.body.priority || "media",
+    tecnico: req.body.tecnico || "sin_asignar",
+    createdAt: new Date(),
+    history: ["Ticket creado"]
+  };
 
- db.run(`
- INSERT INTO tickets (title,status,priority,assigned_to,created_at)
- VALUES (?,?,?,?,?)
- `,
- [req.body.title,"Abierto","Media","tec1",now],
- function(){ res.json({id:this.lastID});});
+  tickets.push(ticket);
+  res.json(ticket);
 });
 
+/* LISTAR */
+app.get("/tickets",(req,res)=>{
+  res.json(tickets);
+});
+
+/* EDITAR */
+app.put("/tickets/:id",(req,res)=>{
+  const t = tickets.find(x=>x.id == req.params.id);
+  if(!t) return res.sendStatus(404);
+
+  t.title = req.body.title || t.title;
+  t.priority = req.body.priority || t.priority;
+  t.tecnico = req.body.tecnico || t.tecnico;
+
+  t.history.push("Ticket actualizado");
+
+  res.json(t);
+});
+
+/* CERRAR */
 app.put("/tickets/:id/close",(req,res)=>{
- const now = new Date().toISOString();
-
- db.run(
- "UPDATE tickets SET status='Cerrado', closed_at=? WHERE id=?",
- [now, req.params.id],
- function(){ res.json({updated:this.changes});}
- );
+  const t = tickets.find(x=>x.id == req.params.id);
+  t.status = "cerrado";
+  t.history.push("Ticket cerrado");
+  res.json(t);
 });
 
-app.listen(3001);
+/* REABRIR */
+app.put("/tickets/:id/open",(req,res)=>{
+  const t = tickets.find(x=>x.id == req.params.id);
+  t.status = "abierto";
+  t.history.push("Ticket reabierto");
+  res.json(t);
+});
+
+app.listen(3001,()=>console.log("Ticket service 3001"));
