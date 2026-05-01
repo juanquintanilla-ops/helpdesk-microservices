@@ -1,86 +1,132 @@
 const express = require("express");
-const cors = require("cors");
 const axios = require("axios");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
-/* KPIs */
+const TICKET_URL = process.env.TICKET_URL || "http://localhost:3001";
+
+/* ===============================
+   KPIs
+================================ */
 app.get("/bi/kpis", async (req,res)=>{
-  const r = await axios.get("http://localhost:3001/tickets");
-  const tickets = r.data;
+  try{
+    const r = await axios.get(`${TICKET_URL}/tickets`);
+    const tickets = r.data;
 
-  const total = tickets.length;
-  const abiertos = tickets.filter(t=>t.status==="abierto").length;
-  const cerrados = tickets.filter(t=>t.status==="cerrado").length;
+    const total = tickets.length;
+    const abiertos = tickets.filter(t=>t.status==="abierto").length;
+    const cerrados = tickets.filter(t=>t.status==="cerrado").length;
 
-  res.json({ total, abiertos, cerrados });
-});
-
-/* MTTR */
-app.get("/bi/mttr", async (req,res)=>{
-  const r = await axios.get("http://localhost:3001/tickets");
-  const tickets = r.data.filter(t=>t.status==="cerrado");
-
-  if(tickets.length === 0){
-    return res.json({ mttr:0 });
+    res.json({ total, abiertos, cerrados });
+  }catch(e){
+    res.status(500).json({error:"kpis error"});
   }
-
-  const total = tickets.reduce((acc,t)=>{
-    return acc + ((new Date() - new Date(t.createdAt))/3600000);
-  },0);
-
-  res.json({ mttr: (total / tickets.length).toFixed(2) });
 });
 
-/* PRIORIDAD */
+/* ===============================
+   MTTR
+================================ */
+app.get("/bi/mttr", async (req,res)=>{
+  try{
+    const r = await axios.get(`${TICKET_URL}/tickets`);
+    const tickets = r.data.filter(t=>t.status==="cerrado");
+
+    if(tickets.length === 0){
+      return res.json({ mttr: 0 });
+    }
+
+    const totalTiempo = tickets.reduce((acc,t)=>{
+      const inicio = new Date(t.createdAt);
+      const fin = new Date(t.closedAt);
+      return acc + (fin - inicio);
+    },0);
+
+    const mttr = totalTiempo / tickets.length / 1000 / 60; // minutos
+
+    res.json({ mttr: mttr.toFixed(2) });
+  }catch(e){
+    res.status(500).json({error:"mttr error"});
+  }
+});
+
+/* ===============================
+   PRIORIDAD
+================================ */
 app.get("/bi/prioridad", async (req,res)=>{
-  const r = await axios.get("http://localhost:3001/tickets");
+  const r = await axios.get(`${TICKET_URL}/tickets`);
   const tickets = r.data;
 
   const result = {};
 
   tickets.forEach(t=>{
-    result[t.priority] = (result[t.priority] || 0) + 1;
+    const p = t.priority || "media";
+    result[p] = (result[p] || 0) + 1;
   });
 
-  res.json(Object.keys(result).map(k=>({ priority:k, total:result[k] })));
+  const data = Object.keys(result).map(k=>({
+    priority:k,
+    total:result[k]
+  }));
+
+  res.json(data);
 });
 
-/* TECNICOS */
+/* ===============================
+   TECNICOS
+================================ */
 app.get("/bi/tecnicos", async (req,res)=>{
-  const r = await axios.get("http://localhost:3001/tickets");
+  const r = await axios.get(`${TICKET_URL}/tickets`);
   const tickets = r.data;
 
   const result = {};
 
   tickets.forEach(t=>{
-    result[t.tecnico] = (result[t.tecnico] || 0) + 1;
+    const tech = t.assignedTo || "sin_asignar";
+    result[tech] = (result[tech] || 0) + 1;
   });
 
-  res.json(Object.keys(result).map(k=>({ tecnico:k, total:result[k] })));
+  const data = Object.keys(result).map(k=>({
+    tecnico:k,
+    total:result[k]
+  }));
+
+  res.json(data);
 });
 
-/* SLA */
+/* ===============================
+   SLA
+================================ */
 app.get("/bi/sla", async (req,res)=>{
-  const r = await axios.get("http://localhost:3001/tickets");
+  const r = await axios.get(`${TICKET_URL}/tickets`);
   const tickets = r.data;
 
-  let ok=0, riesgo=0, vencido=0;
+  let cumplidos = 0;
 
   tickets.forEach(t=>{
-    const diff = (new Date() - new Date(t.createdAt))/3600000;
+    if(t.status==="cerrado"){
+      const inicio = new Date(t.createdAt);
+      const fin = new Date(t.closedAt);
+      const horas = (fin - inicio)/1000/60/60;
 
-    if(diff > 24) vencido++;
-    else if(diff > 12) riesgo++;
-    else ok++;
+      if(horas <= 24){
+        cumplidos++;
+      }
+    }
   });
 
-  res.json([
-    { estado:"OK", total:ok },
-    { estado:"Riesgo", total:riesgo },
-    { estado:"Vencido", total:vencido }
-  ]);
+  res.json({
+    total: tickets.length,
+    cumplidos
+  });
 });
 
-app.listen(3004,()=>console.log("BI service 3004"));
+/* =============================== */
+
+const PORT = process.env.PORT || 3004;
+
+app.listen(PORT,()=>{
+  console.log("BI corriendo en puerto", PORT);
+});
