@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
 
 export default function Dashboard(){
 
-  const [data,setData] = useState([]);
+  const [etl,setEtl] = useState([]);
   const [pred,setPred] = useState({});
 
   useEffect(()=>{
@@ -14,36 +14,72 @@ export default function Dashboard(){
   },[]);
 
   const load = async ()=>{
-    const res = await API.get("/bi/prediccion");
+    const e = await API.get("/bi/etl");
+    const p = await API.get("/bi/prediccion");
 
-    setData(res.data.historico || []);
-    setPred(res.data);
+    setEtl(e.data.data || []);
+    setPred(p.data);
   };
+
+  // agrupar por categoría
+  const data = Object.values(
+    etl.reduce((acc,t)=>{
+      acc[t.categoria] = acc[t.categoria] || {name:t.categoria, total:0};
+      acc[t.categoria].total++;
+      return acc;
+    },{})
+  );
 
   return (
     <div style={{color:"#fff"}}>
 
-      <h2>BI Predictivo</h2>
+      <h2>BI Predictivo de Fallas</h2>
 
+      {/* GRÁFICA */}
       <div style={card}>
-        <h3>Tendencia</h3>
+        <h3>Incidencias por Categoría</h3>
 
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <XAxis dataKey="fecha"/>
+          <BarChart data={data}>
+            <XAxis dataKey="name"/>
             <YAxis/>
             <Tooltip/>
-            <Line dataKey="total"/>
-          </LineChart>
+            <Bar dataKey="total"/>
+          </BarChart>
         </ResponsiveContainer>
 
       </div>
 
+      {/* PREDICCIÓN */}
       <div style={card}>
         <h3>Predicción</h3>
-        <p><b>Próximo periodo:</b> {pred.prediccionProximoPeriodo}</p>
-        <p><b>Tendencia:</b> {pred.tendencia}</p>
-        <p><b>Acción:</b> {pred.recomendacion}</p>
+        <p><b>{pred.prediccion}</b></p>
+        <p>{pred.recomendacion}</p>
+      </div>
+
+      {/* ETL */}
+      <div style={card}>
+        <h3>ETL (Transformación)</h3>
+
+        <table style={{width:"100%"}}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Título</th>
+              <th>Categoría</th>
+            </tr>
+          </thead>
+          <tbody>
+            {etl.map(t=>(
+              <tr key={t.id}>
+                <td>{t.id}</td>
+                <td>{t.titulo}</td>
+                <td>{t.categoria}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
       </div>
 
     </div>
