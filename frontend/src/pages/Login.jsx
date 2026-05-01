@@ -8,13 +8,17 @@ export default function Login(){
 
   const login = async ()=>{
     try{
-      const res = await API.post("/login",{email,password});
+      const res = await API.post("/login",{
+        email,
+        password
+      });
 
       localStorage.setItem("user", JSON.stringify(res.data));
 
       window.location.href = "/tickets";
 
-    }catch{
+    }catch(e){
+      console.log(e);
       alert("Credenciales incorrectas");
     }
   };
@@ -24,12 +28,16 @@ export default function Login(){
       <div style={card}>
         <h2>NEXUS PRO</h2>
 
-        <input style={input} placeholder="Correo"
+        <input
+          style={input}
+          placeholder="Correo"
           value={email}
           onChange={e=>setEmail(e.target.value)}
         />
 
-        <input style={input} type="password"
+        <input
+          style={input}
+          type="password"
           placeholder="Contraseña"
           value={password}
           onChange={e=>setPassword(e.target.value)}
@@ -38,6 +46,10 @@ export default function Login(){
         <button style={btn} onClick={login}>
           Ingresar
         </button>
+
+        <p style={{fontSize:12}}>
+          Usa: cualquier correo / 123456
+        </p>
       </div>
     </div>
   );
