@@ -1,30 +1,44 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import MainLayout from "./layouts/MainLayout";
 import Tickets from "./pages/Tickets";
-import MainLayout from "./layout/MainLayout";
+
+function getUser(){
+  try{
+    const u = localStorage.getItem("user");
+    if(!u || u === "undefined") return null;
+    return JSON.parse(u);
+  }catch{
+    return null;
+  }
+}
 
 export default function App(){
+
+  const user = getUser();
+
+  if(!user){
+    return (
+      <div style={{
+        height:"100vh",
+        display:"flex",
+        justifyContent:"center",
+        alignItems:"center",
+        background:"#020617",
+        color:"#fff"
+      }}>
+        Sesión no válida. Haz login otra vez.
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
-
-      <Routes>
-        <Route path="/" element={<Login/>} />
-
-        <Route path="/dashboard" element={
-          <MainLayout>
-            <Dashboard/>
-          </MainLayout>
-        }/>
-
-        <Route path="/tickets" element={
-          <MainLayout>
-            <Tickets/>
-          </MainLayout>
-        }/>
-
-      </Routes>
-
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/tickets"/>}/>
+          <Route path="/tickets" element={<Tickets/>}/>
+        </Routes>
+      </MainLayout>
     </BrowserRouter>
   );
 }
