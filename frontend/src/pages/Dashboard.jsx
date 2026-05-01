@@ -7,52 +7,53 @@ export default function Dashboard(){
 
   const [role,setRole] = useState("");
   const [data,setData] = useState([]);
-  const [kpis,setKpis] = useState({});
-  const [mttr,setMttr] = useState(0);
 
   useEffect(()=>{
-    const user = JSON.parse(localStorage.getItem("user"));
 
-    if(!user){
-      window.location.href="/";
+    const raw = localStorage.getItem("user");
+
+    // 🔴 VALIDACIÓN CLAVE
+    if(!raw || raw === "undefined"){
+      window.location.href = "/";
+      return;
+    }
+
+    let user;
+
+    try{
+      user = JSON.parse(raw);
+    }catch(e){
+      console.error("Error parsing user:", e);
+      window.location.href = "/";
       return;
     }
 
     setRole(user.role);
     loadData(user);
+
   },[]);
 
   const loadData = async (user)=>{
+    try{
 
-    if(user.role === "tecnico"){
-      const res = await API.get("/bi/tecnico/tec1");
-      setData(res.data);
-    }
+      if(user.role === "admin"){
+        const res = await API.get("/bi/coordinador");
+        setData(Array.isArray(res.data) ? res.data : []);
+      } else {
+        setData([]);
+      }
 
-    if(user.role === "admin"){
-      const res = await API.get("/bi/coordinador");
-      setData(res.data);
-    }
-
-    if(user.role === "bi"){
-      const k = await API.get("/bi/kpis");
-      const m = await API.get("/bi/mttr");
-
-      setKpis(k.data);
-      setMttr(m.data.mttr || 0);
-    }
-
-    if(user.role === "gerencia"){
-      const res = await API.get("/bi/gerencia");
-      setData(res.data);
+    }catch(e){
+      console.error(e);
+      setData([]);
     }
   };
 
   const chartData = {
-    labels: data.map(x => x.status || x.priority || x.fecha),
+    labels: data.map(x => x?.status || "N/A"),
     datasets: [{
-      label: "Datos",
-      data: data.map(x => x.total)
+      label: "Tickets",
+      data: data.map(x => x?.total || 0)
     }]
   };
 
@@ -61,42 +62,16 @@ export default function Dashboard(){
 
       <h1 style={{color:"#fff"}}>Dashboard ({role})</h1>
 
-      {/* KPIs */}
-      <div style={{display:"flex", gap:20, marginBottom:20}}>
-
-        <Card title="Total" value={kpis.total || 0}/>
-        <Card title="Abiertos" value={kpis.abiertos || 0}/>
-        <Card title="Cerrados" value={kpis.cerrados || 0}/>
-        <Card title="MTTR" value={mttr}/>
-
-      </div>
-
-      {/* GRÁFICO */}
-      {data.length > 0 ? (
-        <div style={{background:"#1e293b", padding:20, borderRadius:10}}>
-          <Bar data={chartData}/>
-        </div>
-      ) : (
-        <p style={{color:"#94a3b8"}}>
+      {data.length === 0 ? (
+        <p style={{color:"#ccc"}}>
           No hay datos aún. Ve a Tickets.
         </p>
+      ) : (
+        <div style={{background:"#1e293b", padding:20}}>
+          <Bar data={chartData}/>
+        </div>
       )}
 
-    </div>
-  );
-}
-
-function Card({title, value}){
-  return (
-    <div style={{
-      background:"#1e293b",
-      padding:20,
-      borderRadius:10,
-      color:"#fff",
-      minWidth:120
-    }}>
-      <p>{title}</p>
-      <h2>{value}</h2>
     </div>
   );
 }
