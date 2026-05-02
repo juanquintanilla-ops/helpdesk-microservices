@@ -1,79 +1,72 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
+const XLSX = require("xlsx");
+const multer = require("multer");
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-/* ================= DB ================= */
-const db = new sqlite3.Database("./tickets.db");
+const upload = multer({ storage: multer.memoryStorage() });
 
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS tickets (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT,
-      description TEXT,
-      priority TEXT,
-      status TEXT,
-      technician TEXT,
-      comments TEXT
-    )
-  `);
-});
+/* ================= DATA ================= */
+
+let tickets = [
+  { id: 1, titulo: "Falla internet", tecnico: "Juan", estado: "abierto" },
+  { id: 2, titulo: "PC no enciende", tecnico: "Ana", estado: "cerrado" }
+];
 
 /* ================= GET ================= */
+
 app.get("/tickets", (req, res) => {
-  db.all("SELECT * FROM tickets ORDER BY id DESC", [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+  res.json(tickets);
 });
 
-/* ================= CREATE ================= */
+/* ================= POST ================= */
+
 app.post("/tickets", (req, res) => {
-  const { title, description, priority, technician, comments } = req.body;
-
-  db.run(
-    `INSERT INTO tickets (title, description, priority, status, technician, comments)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [title, description, priority, "abierto", technician || "", comments || ""],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-
-      res.json({
-        id: this.lastID,
-        title,
-        description,
-        priority,
-        status: "abierto",
-        technician,
-        comments
-      });
-    }
-  );
+  const nuevo = {
+    id: Date.now(),
+    ...req.body
+  };
+  tickets.push(nuevo);
+  res.json(nuevo);
 });
 
-/* ================= STATUS ================= */
-app.put("/tickets/:id/status", (req, res) => {
-  const id = req.params.id;
-  const { status } = req.body;
+/* ================= EXPORT EXCEL ================= */
 
-  db.run(
-    "UPDATE tickets SET status = ? WHERE id = ?",
-    [status, id],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
+app.get("/tickets/export", (req, res) => {
 
-      res.json({ ok: true });
-    }
-  );
+  const ws = XLSX.utils.json_to_sheet(tickets);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "Tickets");
+
+  const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+  res.setHeader("Content-Disposition", "attachment; filename=tickets.xlsx");
+  res.send(buffer);
 });
 
-/* ================= START ================= */
-const PORT = process.env.PORT || 3001;
+/* ================= IMPORT EXCEL ================= */
 
-app.listen(PORT, () => {
-  console.log("Ticket Service OK en puerto", PORT);
+app.post("/tickets/import", upload.single("file"), (req, res) => {
+
+  const wb = XLSX.read(req.file.buffer, { type: "buffer" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+
+  const data = XLSX.utils.sheet_to_json(ws);
+
+  tickets = data.map((t, i) => ({
+    id: Date.now() + i,
+    titulo: t.titulo || t.Título || "Sin título",
+    tecnico: t.tecnico || t.Técnico || "N/A",
+    estado: t.estado || t.Estado || "abierto"
+  }));
+
+  res.json({ mensaje: "Importación exitosa", total: tickets.length });
+});
+
+app.listen(3001, () => {
+  console.log("Ticket service corriendo en 3001");
 });

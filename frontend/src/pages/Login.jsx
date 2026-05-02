@@ -1,91 +1,104 @@
 import { useState } from "react";
-import API from "../services/api";
 
 export default function Login(){
 
-  const [email,setEmail] = useState("");
-  const [password,setPassword] = useState("");
+  const [user,setUser] = useState("");
+  const [pass,setPass] = useState("");
+  const [error,setError] = useState("");
 
-  const login = async ()=>{
-    try{
-      const res = await API.post("/login",{
-        email,
-        password
-      });
+  const handleLogin = () => {
 
-      localStorage.setItem("user", JSON.stringify(res.data));
-
-      window.location.href = "/tickets";
-
-    }catch(e){
-      console.log(e);
-      alert("Credenciales incorrectas");
+    if(user === "admin" && pass === "1234"){
+      localStorage.setItem("user", JSON.stringify({user}));
+      window.location.reload();
+    }else{
+      setError("Credenciales incorrectas");
     }
   };
 
   return (
     <div style={container}>
       <div style={card}>
-        <h2>NEXUS PRO</h2>
+        <h2 style={title}>Helpdesk Login</h2>
 
         <input
           style={input}
-          placeholder="Correo"
-          value={email}
-          onChange={e=>setEmail(e.target.value)}
+          placeholder="Usuario"
+          value={user}
+          onChange={(e)=>setUser(e.target.value)}
         />
 
         <input
           style={input}
           type="password"
           placeholder="Contraseña"
-          value={password}
-          onChange={e=>setPassword(e.target.value)}
+          value={pass}
+          onChange={(e)=>setPass(e.target.value)}
         />
 
-        <button style={btn} onClick={login}>
+        <button style={button} onClick={handleLogin}>
           Ingresar
         </button>
 
-        <p style={{fontSize:12}}>
-          Usa: cualquier correo / 123456
-        </p>
+        {error && <p style={errorStyle}>{error}</p>}
+
+        <div style={demo}>
+          <p><b>Demo:</b></p>
+          <p>admin / 1234</p>
+        </div>
       </div>
     </div>
   );
 }
+
+/* ================= ESTILOS ================= */
 
 const container = {
   height:"100vh",
   display:"flex",
   justifyContent:"center",
   alignItems:"center",
-  background:"#020617"
+  background:"#0f172a"
 };
 
 const card = {
-  background:"#111827",
-  padding:30,
-  borderRadius:12,
+  background:"#1e293b",
+  padding:"40px",
+  borderRadius:"12px",
   display:"flex",
   flexDirection:"column",
-  gap:10,
-  width:300,
-  color:"#fff"
+  gap:"15px",
+  width:"320px",
+  boxShadow:"0 0 20px rgba(0,0,0,0.5)"
+};
+
+const title = {
+  color:"#fff",
+  textAlign:"center"
 };
 
 const input = {
-  padding:10,
-  borderRadius:8,
-  border:"1px solid #1f2937",
-  background:"#020617",
-  color:"#fff"
+  padding:"10px",
+  borderRadius:"8px",
+  border:"none"
 };
 
-const btn = {
-  padding:10,
-  background:"#2563eb",
-  color:"#fff",
+const button = {
+  padding:"10px",
+  borderRadius:"8px",
   border:"none",
-  borderRadius:8
+  background:"#3b82f6",
+  color:"#fff",
+  cursor:"pointer"
+};
+
+const errorStyle = {
+  color:"red",
+  textAlign:"center"
+};
+
+const demo = {
+  color:"#cbd5f5",
+  fontSize:"12px",
+  textAlign:"center"
 };

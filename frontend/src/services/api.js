@@ -1,7 +1,9 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: "/api"
+export const TICKET_API = axios.create({
+  baseURL: "http://localhost:3001"
 });
 
-export default API;
+export const BI_API = axios.create({
+  baseURL: "http://localhost:3002"
+});

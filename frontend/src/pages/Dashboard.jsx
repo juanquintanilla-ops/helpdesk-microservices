@@ -1,94 +1,124 @@
 import { useEffect, useState } from "react";
-import API from "../services/api";
+import axios from "axios";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  BarChart,
+  Bar
 } from "recharts";
 
 export default function Dashboard(){
 
-  const [etl,setEtl] = useState([]);
-  const [pred,setPred] = useState({});
+  const [data,setData] = useState(null);
+  const [tickets,setTickets] = useState([]);
 
   useEffect(()=>{
-    load();
+    cargarBI();
+    cargarTickets();
   },[]);
 
-  const load = async ()=>{
-    const e = await API.get("/bi/etl");
-    const p = await API.get("/bi/prediccion");
-
-    setEtl(e.data.data || []);
-    setPred(p.data);
+  const cargarBI = async ()=>{
+    try{
+      const res = await axios.get("http://localhost:3002/bi/prediccion");
+      setData(res.data);
+    }catch(err){
+      console.error(err);
+    }
   };
 
-  // agrupar por categoría
-  const data = Object.values(
-    etl.reduce((acc,t)=>{
-      acc[t.categoria] = acc[t.categoria] || {name:t.categoria, total:0};
-      acc[t.categoria].total++;
-      return acc;
-    },{})
-  );
+  const cargarTickets = async ()=>{
+    try{
+      const res = await axios.get("http://localhost:3001/tickets");
+      setTickets(res.data);
+    }catch(err){
+      console.error(err);
+    }
+  };
+
+  /* ================= KPIs ================= */
+
+  const abiertos = tickets.filter(t => t.estado === "abierto").length;
+  const cerrados = tickets.filter(t => t.estado === "cerrado").length;
 
   return (
-    <div style={{color:"#fff"}}>
+    <div style={{padding:"20px"}}>
 
-      <h2>BI Predictivo de Fallas</h2>
+      <h2>Dashboard BI</h2>
 
-      {/* GRÁFICA */}
-      <div style={card}>
-        <h3>Incidencias por Categoría</h3>
+      {/* ================= KPIs ================= */}
 
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <XAxis dataKey="name"/>
-            <YAxis/>
-            <Tooltip/>
-            <Bar dataKey="total"/>
+      <div style={kpiContainer}>
+        <div style={card}>
+          <h3>Tickets Totales</h3>
+          <p>{tickets.length}</p>
+        </div>
+
+        <div style={card}>
+          <h3>Abiertos</h3>
+          <p>{abiertos}</p>
+        </div>
+
+        <div style={card}>
+          <h3>Cerrados</h3>
+          <p>{cerrados}</p>
+        </div>
+      </div>
+
+      {/* ================= GRÁFICO HISTÓRICO ================= */}
+
+      {data && (
+        <>
+          <h3>Histórico</h3>
+
+          <LineChart width={500} height={300} data={data.historico}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="fecha" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="total" stroke="#8884d8" />
+          </LineChart>
+
+          {/* ================= PREDICCIÓN ================= */}
+
+          <h3>Predicción</h3>
+
+          <BarChart width={500} height={300} data={[
+            { name: "Actual", value: data.historico[data.historico.length-1].total },
+            { name: "Predicción", value: data.prediccionProximoPeriodo }
+          ]}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="value" fill="#82ca9d" />
           </BarChart>
-        </ResponsiveContainer>
 
-      </div>
-
-      {/* PREDICCIÓN */}
-      <div style={card}>
-        <h3>Predicción</h3>
-        <p><b>{pred.prediccion}</b></p>
-        <p>{pred.recomendacion}</p>
-      </div>
-
-      {/* ETL */}
-      <div style={card}>
-        <h3>ETL (Transformación)</h3>
-
-        <table style={{width:"100%"}}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Título</th>
-              <th>Categoría</th>
-            </tr>
-          </thead>
-          <tbody>
-            {etl.map(t=>(
-              <tr key={t.id}>
-                <td>{t.id}</td>
-                <td>{t.titulo}</td>
-                <td>{t.categoria}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-      </div>
+          <p><b>Tendencia:</b> {data.tendencia}</p>
+          <p><b>Recomendación:</b> {data.recomendacion}</p>
+        </>
+      )}
 
     </div>
   );
 }
 
+/* ================= ESTILOS ================= */
+
+const kpiContainer = {
+  display:"flex",
+  gap:"20px",
+  marginBottom:"30px"
+};
+
 const card = {
-  background:"#111827",
-  padding:20,
-  marginTop:20,
-  borderRadius:10
+  background:"#1e293b",
+  color:"#fff",
+  padding:"20px",
+  borderRadius:"10px",
+  minWidth:"120px",
+  textAlign:"center"
 };
