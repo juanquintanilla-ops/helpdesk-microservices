@@ -1,16 +1,18 @@
 import { useState } from "react";
 
-export default function Login(){
+export default function Login({ setUser }){
 
-  const [user,setUser] = useState("");
+  const [user,setUserInput] = useState("");
   const [pass,setPass] = useState("");
   const [error,setError] = useState("");
 
   const handleLogin = () => {
 
     if(user === "admin" && pass === "1234"){
-      localStorage.setItem("user", JSON.stringify({user}));
-      window.location.reload();
+      const userData = { user };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData); // 👈 ESTO REEMPLAZA EL RELOAD
     }else{
       setError("Credenciales incorrectas");
     }
@@ -25,7 +27,7 @@ export default function Login(){
           style={input}
           placeholder="Usuario"
           value={user}
-          onChange={(e)=>setUser(e.target.value)}
+          onChange={(e)=>setUserInput(e.target.value)}
         />
 
         <input
@@ -51,54 +53,4 @@ export default function Login(){
   );
 }
 
-/* ================= ESTILOS ================= */
-
-const container = {
-  height:"100vh",
-  display:"flex",
-  justifyContent:"center",
-  alignItems:"center",
-  background:"#0f172a"
-};
-
-const card = {
-  background:"#1e293b",
-  padding:"40px",
-  borderRadius:"12px",
-  display:"flex",
-  flexDirection:"column",
-  gap:"15px",
-  width:"320px",
-  boxShadow:"0 0 20px rgba(0,0,0,0.5)"
-};
-
-const title = {
-  color:"#fff",
-  textAlign:"center"
-};
-
-const input = {
-  padding:"10px",
-  borderRadius:"8px",
-  border:"none"
-};
-
-const button = {
-  padding:"10px",
-  borderRadius:"8px",
-  border:"none",
-  background:"#3b82f6",
-  color:"#fff",
-  cursor:"pointer"
-};
-
-const errorStyle = {
-  color:"red",
-  textAlign:"center"
-};
-
-const demo = {
-  color:"#cbd5f5",
-  fontSize:"12px",
-  textAlign:"center"
-};
+/* estilos iguales */
