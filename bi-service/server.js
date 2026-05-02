@@ -16,10 +16,29 @@ app.get("/bi/etl", async (req,res)=>{
 
       let categoria = "General";
 
-      if(title.includes("internet") || title.includes("red")) categoria = "Red";
-      else if(title.includes("teclado") || title.includes("mouse")) categoria = "Periféricos";
-      else if(title.includes("pantalla")) categoria = "Hardware";
-      else if(title.includes("ofimatica")) categoria = "Software";
+      if(title.includes("internet") || title.includes("red")){
+        categoria = "Red";
+      }
+      else if(
+        title.includes("teclado") ||
+        title.includes("mouse") ||
+        title.includes("maouse") || // corrección
+        title.includes("raton")
+      ){
+        categoria = "Perifericos";
+      }
+      else if(
+        title.includes("pantalla") ||
+        title.includes("monitor")
+      ){
+        categoria = "Hardware";
+      }
+      else if(
+        title.includes("ofimatica") ||
+        title.includes("software")
+      ){
+        categoria = "Software";
+      }
 
       return {
         id: t.id,
@@ -41,7 +60,7 @@ app.get("/bi/etl", async (req,res)=>{
   }
 });
 
-/* ================= PREDICCIÓN DE FALLA ================= */
+/* ================= PREDICCIÓN ================= */
 app.get("/bi/prediccion", async (req,res)=>{
   try{
     const r = await axios.get(`${TICKET_URL}/tickets`);
@@ -49,24 +68,41 @@ app.get("/bi/prediccion", async (req,res)=>{
 
     const conteo = {
       Red:0,
-      "Periféricos":0,
+      Perifericos:0,
       Hardware:0,
-      Software:0,
-      General:0
+      Software:0
     };
 
     data.forEach(t=>{
       const title = (t.title || "").toLowerCase();
 
-      if(title.includes("internet") || title.includes("red")) conteo.Red++;
-      else if(title.includes("teclado") || title.includes("mouse")) conteo["Periféricos"]++;
-      else if(title.includes("pantalla")) conteo.Hardware++;
-      else if(title.includes("ofimatica")) conteo.Software++;
-      else conteo.General++;
+      if(title.includes("internet") || title.includes("red")){
+        conteo.Red++;
+      }
+      else if(
+        title.includes("teclado") ||
+        title.includes("mouse") ||
+        title.includes("maouse") ||
+        title.includes("raton")
+      ){
+        conteo.Perifericos++;
+      }
+      else if(
+        title.includes("pantalla") ||
+        title.includes("monitor")
+      ){
+        conteo.Hardware++;
+      }
+      else if(
+        title.includes("ofimatica") ||
+        title.includes("software")
+      ){
+        conteo.Software++;
+      }
     });
 
-    // encontrar categoría dominante
-    let maxCat = "General";
+    // encontrar la categoría dominante
+    let maxCat = "Red";
     let maxVal = 0;
 
     for(let c in conteo){
@@ -78,17 +114,15 @@ app.get("/bi/prediccion", async (req,res)=>{
 
     res.json({
       conteo,
-      prediccion: `El próximo incidente más probable es: ${maxCat}`,
+      prediccion: `Próxima falla probable: ${maxCat}`,
       recomendacion:
         maxCat === "Red"
-          ? "Revisar conectividad e infraestructura"
-          : maxCat === "Periféricos"
-          ? "Verificar dispositivos de entrada"
+          ? "Revisar conectividad y routers"
+          : maxCat === "Perifericos"
+          ? "Verificar teclados y mouse"
           : maxCat === "Hardware"
           ? "Revisar componentes físicos"
-          : maxCat === "Software"
-          ? "Validar aplicaciones instaladas"
-          : "Monitoreo general"
+          : "Validar software instalado"
     });
 
   }catch(e){
@@ -96,6 +130,7 @@ app.get("/bi/prediccion", async (req,res)=>{
   }
 });
 
+/* ================= START ================= */
 app.listen(3004, ()=>{
-  console.log("BI predicción de fallas listo");
+  console.log("BI final funcionando correctamente");
 });
