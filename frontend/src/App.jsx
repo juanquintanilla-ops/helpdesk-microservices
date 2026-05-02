@@ -1,9 +1,8 @@
 import { useState } from "react";
-import Login from "./pages/Login";
-import Tickets from "./pages/Tickets";
+import Login from "./Login";
+import Tickets from "./Tickets";
 
 export default function App(){
-
   const [user,setUser] = useState(
     JSON.parse(localStorage.getItem("user"))
   );
