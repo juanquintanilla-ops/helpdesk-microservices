@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Dashboard from "./Dashboard";
 
+const API = "https://ticket-service-bo5t.onrender.com";
+
 export default function Tickets(){
 
   const [tickets,setTickets] = useState([]);
@@ -13,15 +15,15 @@ export default function Tickets(){
 
   const cargar = async ()=>{
     try{
-      const res = await axios.get("http://localhost:3001/tickets");
+      const res = await axios.get(API + "/tickets");
       setTickets(res.data);
     }catch(err){
-      console.error(err);
+      console.error("Error cargando tickets", err);
     }
   };
 
   const exportar = () => {
-    window.open("http://localhost:3001/tickets/export");
+    window.open(API + "/tickets/export");
   };
 
   const importar = async (e) => {
@@ -29,7 +31,7 @@ export default function Tickets(){
     const formData = new FormData();
     formData.append("file", file);
 
-    await axios.post("http://localhost:3001/tickets/import", formData);
+    await axios.post(API + "/tickets/import", formData);
     cargar();
   };
 
@@ -50,21 +52,21 @@ export default function Tickets(){
   return (
     <div style={{padding:"20px"}}>
 
-      <div style={top}>
+      <div style={{display:"flex", justifyContent:"space-between"}}>
         <h2>Tickets</h2>
 
-        <div style={{display:"flex", gap:"10px"}}>
+        <div>
           <button onClick={()=>setView("bi")}>Ver BI</button>
           <button onClick={logout}>Salir</button>
         </div>
       </div>
 
-      <div style={{display:"flex", gap:"10px", marginBottom:"15px"}}>
+      <div style={{marginBottom:"15px"}}>
         <button onClick={exportar}>Exportar Excel</button>
         <input type="file" onChange={importar} />
       </div>
 
-      <table border="1" cellPadding="5">
+      <table border="1">
         <thead>
           <tr>
             <th>ID</th>
@@ -89,10 +91,3 @@ export default function Tickets(){
     </div>
   );
 }
-
-const top = {
-  display:"flex",
-  justifyContent:"space-between",
-  alignItems:"center",
-  marginBottom:"20px"
-};
