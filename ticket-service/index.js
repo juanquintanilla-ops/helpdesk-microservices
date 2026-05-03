@@ -10,8 +10,6 @@ app.use(express.json());
 
 const upload = multer({ dest: "uploads/" });
 
-/* ===== BD ===== */
-
 const db = new sqlite3.Database("tickets.db");
 
 db.serialize(() => {
@@ -27,7 +25,6 @@ db.serialize(() => {
 });
 
 /* ===== GET ===== */
-
 app.get("/tickets", (req, res) => {
   db.all("SELECT * FROM tickets", [], (err, rows) => {
     if (err) return res.status(500).send(err);
@@ -36,7 +33,6 @@ app.get("/tickets", (req, res) => {
 });
 
 /* ===== POST ===== */
-
 app.post("/tickets", (req, res) => {
   const { titulo, descripcion, tecnico, estado } = req.body;
 
@@ -51,8 +47,7 @@ app.post("/tickets", (req, res) => {
   );
 });
 
-/* ===== UPDATE ESTADO ===== */
-
+/* ===== UPDATE ESTADO (IMPORTANTE) ===== */
 app.put("/tickets/:id", (req, res) => {
   const { estado } = req.body;
 
@@ -60,17 +55,21 @@ app.put("/tickets/:id", (req, res) => {
     `UPDATE tickets SET estado = ? WHERE id = ?`,
     [estado, req.params.id],
     function (err) {
-      if (err) return res.status(500).send(err);
-      res.send("Actualizado");
+      if (err) return res.status(500).json(err);
+
+      // 🔴 CLAVE: validar cambios
+      if (this.changes === 0) {
+        return res.status(404).send("Ticket no encontrado");
+      }
+
+      res.json({ ok: true });
     }
   );
 });
 
-/* ===== EXPORT EXCEL ===== */
-
+/* ===== EXPORT ===== */
 app.get("/tickets/export", (req, res) => {
   db.all("SELECT * FROM tickets", [], (err, rows) => {
-    if (err) return res.status(500).send(err);
 
     const data = rows.map(t => ({
       Titulo: t.titulo,
@@ -90,8 +89,7 @@ app.get("/tickets/export", (req, res) => {
   });
 });
 
-/* ===== IMPORT EXCEL ===== */
-
+/* ===== IMPORT ===== */
 app.post("/tickets/import", upload.single("file"), (req, res) => {
   const wb = XLSX.readFile(req.file.path);
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -101,20 +99,11 @@ app.post("/tickets/import", upload.single("file"), (req, res) => {
     db.run(
       `INSERT INTO tickets (titulo, descripcion, tecnico, estado)
        VALUES (?,?,?,?)`,
-      [
-        row.Titulo,
-        row.Descripcion,
-        row.Tecnico,
-        row.Estado
-      ]
+      [row.Titulo, row.Descripcion, row.Tecnico, row.Estado]
     );
   });
 
-  res.send("Importado correctamente");
+  res.send("Importado");
 });
 
-/* ===== START ===== */
-
-app.listen(3001, () => {
-  console.log("Ticket service corriendo en puerto 3001");
-});
+app.listen(3001, () => console.log("Ticket service OK"));

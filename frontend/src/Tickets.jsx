@@ -15,9 +15,7 @@ export default function Tickets(){
     estado:"Abierto"
   });
 
-  useEffect(()=>{
-    cargar();
-  },[]);
+  useEffect(()=>{ cargar(); },[]);
 
   const cargar = async ()=>{
     const res = await axios.get(API + "/tickets");
@@ -26,14 +24,7 @@ export default function Tickets(){
 
   const crear = async ()=>{
     await axios.post(API + "/tickets", form);
-
-    setForm({
-      titulo:"",
-      descripcion:"",
-      tecnico:"",
-      estado:"Abierto"
-    });
-
+    setForm({titulo:"",descripcion:"",tecnico:"",estado:"Abierto"});
     setView("list");
     cargar();
   };
@@ -43,15 +34,17 @@ export default function Tickets(){
     cargar();
   };
 
-  const exportar = ()=>{
-    window.open(API + "/tickets/export");
+  const getColor = (estado)=>{
+    if(estado==="Abierto") return "#22c55e";
+    if(estado==="En proceso") return "#f59e0b";
+    return "#ef4444";
   };
 
-  const importar = async (e)=>{
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
+  const exportar = ()=> window.open(API + "/tickets/export");
 
+  const importar = async (e)=>{
+    const formData = new FormData();
+    formData.append("file", e.target.files[0]);
     await axios.post(API + "/tickets/import", formData);
     cargar();
   };
@@ -66,30 +59,18 @@ export default function Tickets(){
 
       {/* SIDEBAR */}
       <div style={sidebar}>
-
         <h2 style={logo}>Nexus Pro</h2>
 
-        <button style={menuBtn} onClick={()=>setView("list")}>
-          📋 Tickets
-        </button>
-
-        <button style={menuBtn} onClick={()=>setView("create")}>
-          ➕ Crear
-        </button>
-
-        <button style={menuBtn} onClick={exportar}>
-          📤 Exportar Excel
-        </button>
+        <button style={menuBtn} onClick={()=>setView("list")}>📋 Tickets</button>
+        <button style={menuBtn} onClick={()=>setView("create")}>➕ Crear</button>
+        <button style={menuBtn} onClick={exportar}>📤 Exportar</button>
 
         <label style={menuBtn}>
-          📥 Importar Excel
+          📥 Importar
           <input type="file" hidden onChange={importar}/>
         </label>
 
-        <button style={logoutBtn} onClick={logout}>
-          🚪 Salir
-        </button>
-
+        <button style={logoutBtn} onClick={logout}>Salir</button>
       </div>
 
       {/* CONTENIDO */}
@@ -107,6 +88,7 @@ export default function Tickets(){
                   <th>Descripción</th>
                   <th>Técnico</th>
                   <th>Estado</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
 
@@ -117,18 +99,31 @@ export default function Tickets(){
                     <td>{t.titulo}</td>
                     <td>{t.descripcion}</td>
                     <td>{t.tecnico}</td>
-                    <td>
-                      {t.estado}
-                      <br/>
 
-                      {t.estado !== "Cerrado" && (
-                        <button onClick={()=>cambiarEstado(t.id,"Cerrado")}>
+                    <td>
+                      <span style={{
+                        background:getColor(t.estado),
+                        padding:"5px 10px",
+                        borderRadius:"6px",
+                        color:"#fff"
+                      }}>
+                        {t.estado}
+                      </span>
+                    </td>
+
+                    <td>
+                      {t.estado !== "Cerrado" ? (
+                        <button
+                          style={cerrarBtn}
+                          onClick={()=>cambiarEstado(t.id,"Cerrado")}
+                        >
                           Cerrar
                         </button>
-                      )}
-
-                      {t.estado === "Cerrado" && (
-                        <button onClick={()=>cambiarEstado(t.id,"Abierto")}>
+                      ) : (
+                        <button
+                          style={reabrirBtn}
+                          onClick={()=>cambiarEstado(t.id,"Abierto")}
+                        >
                           Reabrir
                         </button>
                       )}
@@ -145,42 +140,20 @@ export default function Tickets(){
             <h2>Nuevo Ticket</h2>
 
             <div style={formBox}>
+              <input placeholder="Título" value={form.titulo}
+                onChange={e=>setForm({...form,titulo:e.target.value})} style={input}/>
 
-              <input
-                placeholder="Título"
-                value={form.titulo}
-                onChange={e=>setForm({...form, titulo:e.target.value})}
-                style={input}
-              />
-
-              <textarea
-                placeholder="Descripción del problema"
+              <textarea placeholder="Descripción"
                 value={form.descripcion}
-                onChange={e=>setForm({...form, descripcion:e.target.value})}
-                style={{...input, height:"100px"}}
-              />
+                onChange={e=>setForm({...form,descripcion:e.target.value})}
+                style={{...input,height:"100px"}}/>
 
-              <input
-                placeholder="Técnico"
+              <input placeholder="Técnico"
                 value={form.tecnico}
-                onChange={e=>setForm({...form, tecnico:e.target.value})}
-                style={input}
-              />
+                onChange={e=>setForm({...form,tecnico:e.target.value})}
+                style={input}/>
 
-              <select
-                value={form.estado}
-                onChange={e=>setForm({...form, estado:e.target.value})}
-                style={input}
-              >
-                <option>Abierto</option>
-                <option>En proceso</option>
-                <option>Cerrado</option>
-              </select>
-
-              <button style={btn} onClick={crear}>
-                Guardar
-              </button>
-
+              <button style={btn} onClick={crear}>Guardar</button>
             </div>
           </>
         )}
@@ -212,21 +185,20 @@ const logo = {
 
 const menuBtn = {
   padding:"10px",
-  border:"none",
   borderRadius:"8px",
   background:"#1e293b",
   color:"#fff",
-  cursor:"pointer",
-  textAlign:"left"
+  border:"none",
+  cursor:"pointer"
 };
 
 const logoutBtn = {
   marginTop:"auto",
+  background:"#ef4444",
+  color:"#fff",
   padding:"10px",
   border:"none",
-  borderRadius:"8px",
-  background:"#ef4444",
-  color:"#fff"
+  borderRadius:"8px"
 };
 
 const content = {
@@ -241,12 +213,25 @@ const table = {
   borderCollapse:"collapse"
 };
 
-const formBox = {
-  display:"flex",
-  flexDirection:"column",
-  gap:"10px",
-  maxWidth:"400px"
+const cerrarBtn = {
+  background:"#ef4444",
+  color:"#fff",
+  border:"none",
+  padding:"6px 10px",
+  borderRadius:"6px",
+  cursor:"pointer"
 };
+
+const reabrirBtn = {
+  background:"#22c55e",
+  color:"#fff",
+  border:"none",
+  padding:"6px 10px",
+  borderRadius:"6px",
+  cursor:"pointer"
+};
+
+const formBox = { display:"flex", flexDirection:"column", gap:"10px" };
 
 const input = {
   padding:"10px",
@@ -255,9 +240,9 @@ const input = {
 };
 
 const btn = {
+  background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
+  color:"#fff",
   padding:"10px",
   border:"none",
-  borderRadius:"8px",
-  background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
-  color:"#fff"
+  borderRadius:"8px"
 };
