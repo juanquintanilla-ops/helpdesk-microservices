@@ -12,13 +12,10 @@ const upload = multer({ dest: "uploads/" });
 
 const db = new sqlite3.Database("tickets.db");
 
-/* 🔴 RECREA TABLA LIMPIA (IMPORTANTE) */
+/* ===== TABLA ===== */
 db.serialize(() => {
-
-  db.run(`DROP TABLE IF EXISTS tickets`);
-
   db.run(`
-    CREATE TABLE tickets (
+    CREATE TABLE IF NOT EXISTS tickets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       titulo TEXT,
       descripcion TEXT,
@@ -26,12 +23,14 @@ db.serialize(() => {
       estado TEXT
     )
   `);
-
 });
+
+/* ===== DEBUG ===== */
+app.get("/ping", (req,res)=>res.send("pong"));
 
 /* ===== GET ===== */
 app.get("/tickets", (req, res) => {
-  db.all("SELECT * FROM tickets", [], (err, rows) => {
+  db.all("SELECT * FROM tickets ORDER BY id ASC", [], (err, rows) => {
     if (err) return res.status(500).send(err);
     res.json(rows);
   });
@@ -39,12 +38,12 @@ app.get("/tickets", (req, res) => {
 
 /* ===== POST ===== */
 app.post("/tickets", (req, res) => {
-  const { titulo, descripcion, tecnico, estado } = req.body;
+  const { titulo, descripcion, tecnico } = req.body;
 
   db.run(
     `INSERT INTO tickets (titulo, descripcion, tecnico, estado)
      VALUES (?,?,?,?)`,
-    [titulo, descripcion, tecnico, estado],
+    [titulo, descripcion, tecnico, "Abierto"],
     function (err) {
       if (err) return res.status(500).send(err);
       res.json({ id: this.lastID });
@@ -52,18 +51,26 @@ app.post("/tickets", (req, res) => {
   );
 });
 
-/* 🔴 UPDATE ESTADO (CORRECTO) */
+/* 🔴 UPDATE (CLAVE REAL) */
 app.put("/tickets/:id", (req, res) => {
+  const id = parseInt(req.params.id);
   const { estado } = req.body;
+
+  console.log("UPDATE ->", id, estado); // 👈 LOG
 
   db.run(
     `UPDATE tickets SET estado = ? WHERE id = ?`,
-    [estado, req.params.id],
+    [estado, id],
     function (err) {
-      if (err) return res.status(500).send(err);
+      if (err) {
+        console.log("ERROR UPDATE", err);
+        return res.status(500).send(err);
+      }
+
+      console.log("CHANGES:", this.changes); // 👈 LOG
 
       if (this.changes === 0) {
-        return res.status(404).send("No existe");
+        return res.status(404).send("Ticket no encontrado");
       }
 
       res.json({ ok: true });
@@ -101,11 +108,11 @@ app.post("/tickets/import", upload.single("file"), (req, res) => {
     db.run(
       `INSERT INTO tickets (titulo, descripcion, tecnico, estado)
        VALUES (?,?,?,?)`,
-      [row.Titulo, row.Descripcion, row.Tecnico, row.Estado]
+      [row.Titulo, row.Descripcion, row.Tecnico, row.Estado || "Abierto"]
     );
   });
 
   res.send("OK");
 });
 
-app.listen(3001, () => console.log("OK"));
+app.listen(3001, () => console.log("Ticket service OK"));

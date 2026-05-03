@@ -6,6 +6,13 @@ const API = "https://ticket-service-bo5t.onrender.com";
 export default function Tickets(){
 
   const [tickets,setTickets] = useState([]);
+  const [view,setView] = useState("list");
+
+  const [form,setForm] = useState({
+    titulo:"",
+    descripcion:"",
+    tecnico:""
+  });
 
   useEffect(()=>{ cargar(); },[]);
 
@@ -14,72 +21,160 @@ export default function Tickets(){
     setTickets(res.data);
   };
 
-  const cambiarEstado = async (id, estado)=>{
-    await axios.put(API + "/tickets/" + id, { estado });
+  const crear = async ()=>{
+    await axios.post(API + "/tickets", form);
+    setForm({titulo:"",descripcion:"",tecnico:""});
+    setView("list");
     cargar();
   };
 
-  const getColor = (estado)=>{
-    if(estado.toLowerCase()==="abierto") return "#22c55e";
-    if(estado.toLowerCase()==="en proceso") return "#f59e0b";
+  const cambiarEstado = async (id, estado)=>{
+    console.log("CLICK", id, estado); // 👈 DEBUG
+
+    await axios.put(API + "/tickets/" + id, { estado });
+
+    await cargar();
+  };
+
+  const colorEstado = (estado)=>{
+    if(estado==="Abierto") return "#22c55e";
+    if(estado==="En proceso") return "#f59e0b";
     return "#ef4444";
   };
 
+  const logout = ()=>{
+    localStorage.removeItem("user");
+    window.location.reload();
+  };
+
   return (
-    <div style={{padding:"20px", background:"#0f172a", color:"#fff"}}>
+    <div style={{display:"flex", height:"100vh"}}>
 
-      <h2>Tickets</h2>
+      {/* SIDEBAR */}
+      <div style={{
+        width:"230px",
+        background:"#020617",
+        color:"#fff",
+        padding:"20px",
+        display:"flex",
+        flexDirection:"column",
+        gap:"10px"
+      }}>
+        <h2 style={{
+          background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
+          WebkitBackgroundClip:"text",
+          WebkitTextFillColor:"transparent"
+        }}>
+          Nexus Pro
+        </h2>
 
-      <table style={{width:"100%"}}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Título</th>
-            <th>Técnico</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
+        <button onClick={()=>setView("list")}>📋 Tickets</button>
+        <button onClick={()=>setView("create")}>➕ Crear</button>
 
-        <tbody>
-          {tickets.map(t=>(
-            <tr key={t.id}>
-              <td>{t.id}</td>
-              <td>{t.titulo}</td>
-              <td>{t.tecnico}</td>
+        <button onClick={logout} style={{marginTop:"auto"}}>
+          Salir
+        </button>
+      </div>
 
-              <td>
-                <span style={{
-                  background:getColor(t.estado),
-                  padding:"5px 10px",
-                  borderRadius:"6px"
-                }}>
-                  {t.estado}
-                </span>
-              </td>
+      {/* CONTENIDO */}
+      <div style={{
+        flex:1,
+        padding:"20px",
+        background:"#0f172a",
+        color:"#fff"
+      }}>
 
-              <td>
-                {t.estado.toLowerCase() !== "cerrado" ? (
-                  <button
-                    onClick={()=>cambiarEstado(t.id,"Cerrado")}
-                    style={{background:"#ef4444", color:"#fff"}}
-                  >
-                    Cerrar
-                  </button>
-                ) : (
-                  <button
-                    onClick={()=>cambiarEstado(t.id,"Abierto")}
-                    style={{background:"#22c55e", color:"#fff"}}
-                  >
-                    Reabrir
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
+        {view === "list" && (
+          <>
+            <h2>Tickets</h2>
 
-      </table>
+            <table style={{width:"100%"}}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Técnico</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {tickets.map(t=>(
+                  <tr key={t.id}>
+                    <td>{t.id}</td>
+                    <td>{t.titulo}</td>
+                    <td>{t.tecnico}</td>
+
+                    <td>
+                      <span style={{
+                        background:colorEstado(t.estado),
+                        padding:"6px 10px",
+                        borderRadius:"6px"
+                      }}>
+                        {t.estado}
+                      </span>
+                    </td>
+
+                    <td>
+                      {t.estado !== "Cerrado" ? (
+                        <button
+                          style={{
+                            background:"#ef4444",
+                            color:"#fff",
+                            padding:"6px 12px",
+                            border:"none",
+                            borderRadius:"6px",
+                            cursor:"pointer"
+                          }}
+                          onClick={()=>cambiarEstado(t.id,"Cerrado")}
+                        >
+                          Cerrar
+                        </button>
+                      ) : (
+                        <button
+                          style={{
+                            background:"#22c55e",
+                            color:"#fff",
+                            padding:"6px 12px",
+                            border:"none",
+                            borderRadius:"6px",
+                            cursor:"pointer"
+                          }}
+                          onClick={()=>cambiarEstado(t.id,"Abierto")}
+                        >
+                          Reabrir
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        {view === "create" && (
+          <>
+            <h2>Nuevo Ticket</h2>
+
+            <input placeholder="Título"
+              value={form.titulo}
+              onChange={e=>setForm({...form,titulo:e.target.value})}/>
+
+            <textarea placeholder="Descripción"
+              value={form.descripcion}
+              onChange={e=>setForm({...form,descripcion:e.target.value})}/>
+
+            <input placeholder="Técnico"
+              value={form.tecnico}
+              onChange={e=>setForm({...form,tecnico:e.target.value})}/>
+
+            <button onClick={crear}>Guardar</button>
+          </>
+        )}
+
+      </div>
     </div>
   );
 }
