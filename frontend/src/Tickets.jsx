@@ -36,6 +36,21 @@ export default function Tickets(){
     cargar();
   };
 
+  /* ===== EXPORTAR ===== */
+  const exportar = ()=>{
+    window.open(API + "/tickets/export");
+  };
+
+  /* ===== IMPORTAR ===== */
+  const importar = async (e)=>{
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await axios.post(API + "/tickets/import", formData);
+    cargar();
+  };
+
   const estadoColor = (estado)=>{
     const e = estado.toLowerCase();
     if(e==="abierto") return "#22c55e";
@@ -74,6 +89,18 @@ export default function Tickets(){
         {view === "list" && (
           <>
             <h2>Gestión de Tickets</h2>
+
+            {/* 🔴 ACCIONES */}
+            <div style={{marginBottom:"15px", display:"flex", gap:"10px"}}>
+              <button style={exportBtn} onClick={exportar}>
+                Exportar Excel
+              </button>
+
+              <label style={importBtn}>
+                Importar Excel
+                <input type="file" onChange={importar} hidden />
+              </label>
+            </div>
 
             <table style={table}>
               <thead>
@@ -171,10 +198,7 @@ export default function Tickets(){
 
 /* ===== ESTILOS ===== */
 
-const layout = {
-  display:"flex",
-  height:"100vh"
-};
+const layout = { display:"flex", height:"100vh" };
 
 const sidebar = {
   width:"240px",
@@ -220,10 +244,7 @@ const content = {
   color:"#fff"
 };
 
-const table = {
-  width:"100%",
-  borderCollapse:"collapse"
-};
+const table = { width:"100%", borderCollapse:"collapse" };
 
 const cerrarBtn = {
   background:"#ef4444",
@@ -262,5 +283,22 @@ const guardarBtn = {
   padding:"10px",
   border:"none",
   borderRadius:"10px",
+  cursor:"pointer"
+};
+
+const exportBtn = {
+  background:"#3b82f6",
+  color:"#fff",
+  padding:"8px 12px",
+  border:"none",
+  borderRadius:"8px",
+  cursor:"pointer"
+};
+
+const importBtn = {
+  background:"#22c55e",
+  color:"#fff",
+  padding:"8px 12px",
+  borderRadius:"8px",
   cursor:"pointer"
 };
