@@ -12,9 +12,13 @@ const upload = multer({ dest: "uploads/" });
 
 const db = new sqlite3.Database("tickets.db");
 
+/* 🔴 RECREA TABLA LIMPIA (IMPORTANTE) */
 db.serialize(() => {
+
+  db.run(`DROP TABLE IF EXISTS tickets`);
+
   db.run(`
-    CREATE TABLE IF NOT EXISTS tickets (
+    CREATE TABLE tickets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       titulo TEXT,
       descripcion TEXT,
@@ -22,6 +26,7 @@ db.serialize(() => {
       estado TEXT
     )
   `);
+
 });
 
 /* ===== GET ===== */
@@ -47,7 +52,7 @@ app.post("/tickets", (req, res) => {
   );
 });
 
-/* ===== UPDATE ESTADO (IMPORTANTE) ===== */
+/* 🔴 UPDATE ESTADO (CORRECTO) */
 app.put("/tickets/:id", (req, res) => {
   const { estado } = req.body;
 
@@ -55,11 +60,10 @@ app.put("/tickets/:id", (req, res) => {
     `UPDATE tickets SET estado = ? WHERE id = ?`,
     [estado, req.params.id],
     function (err) {
-      if (err) return res.status(500).json(err);
+      if (err) return res.status(500).send(err);
 
-      // 🔴 CLAVE: validar cambios
       if (this.changes === 0) {
-        return res.status(404).send("Ticket no encontrado");
+        return res.status(404).send("No existe");
       }
 
       res.json({ ok: true });
@@ -82,10 +86,8 @@ app.get("/tickets/export", (req, res) => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Tickets");
 
-    const file = "tickets.xlsx";
-    XLSX.writeFile(wb, file);
-
-    res.download(file);
+    XLSX.writeFile(wb, "tickets.xlsx");
+    res.download("tickets.xlsx");
   });
 });
 
@@ -103,7 +105,7 @@ app.post("/tickets/import", upload.single("file"), (req, res) => {
     );
   });
 
-  res.send("Importado");
+  res.send("OK");
 });
 
-app.listen(3001, () => console.log("Ticket service OK"));
+app.listen(3001, () => console.log("OK"));
