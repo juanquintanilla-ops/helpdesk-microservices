@@ -7,10 +7,10 @@ export default function Tickets(){
 
   const [tickets,setTickets] = useState([]);
   const [view,setView] = useState("list");
-  const [loading,setLoading] = useState(true);
 
   const [form,setForm] = useState({
     titulo:"",
+    descripcion:"",
     tecnico:"",
     estado:"Abierto"
   });
@@ -20,25 +20,22 @@ export default function Tickets(){
   },[]);
 
   const cargar = async ()=>{
-    try{
-      const res = await axios.get(API + "/tickets");
-      setTickets(res.data);
-    }catch(err){
-      console.error(err);
-    }finally{
-      setLoading(false);
-    }
+    const res = await axios.get(API + "/tickets");
+    setTickets(res.data);
   };
 
   const crear = async ()=>{
-    try{
-      await axios.post(API + "/tickets", form);
-      setForm({titulo:"", tecnico:"", estado:"Abierto"});
-      setView("list");
-      cargar();
-    }catch(err){
-      console.error(err);
-    }
+    await axios.post(API + "/tickets", form);
+
+    setForm({
+      titulo:"",
+      descripcion:"",
+      tecnico:"",
+      estado:"Abierto"
+    });
+
+    setView("list");
+    cargar();
   };
 
   const exportar = ()=>{
@@ -47,7 +44,6 @@ export default function Tickets(){
 
   const importar = async (e)=>{
     const file = e.target.files[0];
-    if(!file) return;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -66,6 +62,7 @@ export default function Tickets(){
 
       {/* SIDEBAR */}
       <div style={sidebar}>
+
         <h2 style={logo}>Nexus Pro</h2>
 
         <button style={menuBtn} onClick={()=>setView("list")}>
@@ -73,7 +70,7 @@ export default function Tickets(){
         </button>
 
         <button style={menuBtn} onClick={()=>setView("create")}>
-          ➕ Crear Ticket
+          ➕ Crear
         </button>
 
         <button style={menuBtn} onClick={exportar}>
@@ -86,46 +83,47 @@ export default function Tickets(){
         </label>
 
         <button style={logoutBtn} onClick={logout}>
-          🚪 Cerrar sesión
+          🚪 Salir
         </button>
+
       </div>
 
-      {/* CONTENT */}
+      {/* CONTENIDO */}
       <div style={content}>
 
         {view === "list" && (
           <>
-            <h2>Listado de Tickets</h2>
+            <h2>Tickets</h2>
 
-            {loading ? <p>Cargando...</p> : (
-              <table style={table}>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Título</th>
-                    <th>Técnico</th>
-                    <th>Estado</th>
+            <table style={table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Descripción</th>
+                  <th>Técnico</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {tickets.map(t=>(
+                  <tr key={t.id}>
+                    <td>{t.id}</td>
+                    <td>{t.titulo}</td>
+                    <td>{t.descripcion}</td>
+                    <td>{t.tecnico}</td>
+                    <td>{t.estado}</td>
                   </tr>
-                </thead>
-
-                <tbody>
-                  {tickets.map(t=>(
-                    <tr key={t.id}>
-                      <td>{t.id}</td>
-                      <td>{t.titulo}</td>
-                      <td>{t.tecnico}</td>
-                      <td>{t.estado}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                ))}
+              </tbody>
+            </table>
           </>
         )}
 
         {view === "create" && (
           <>
-            <h2>Crear Ticket</h2>
+            <h2>Nuevo Ticket</h2>
 
             <div style={formBox}>
 
@@ -134,6 +132,13 @@ export default function Tickets(){
                 value={form.titulo}
                 onChange={e=>setForm({...form, titulo:e.target.value})}
                 style={input}
+              />
+
+              <textarea
+                placeholder="Descripción del problema"
+                value={form.descripcion}
+                onChange={e=>setForm({...form, descripcion:e.target.value})}
+                style={{...input, height:"100px"}}
               />
 
               <input
@@ -154,7 +159,7 @@ export default function Tickets(){
               </select>
 
               <button style={btn} onClick={crear}>
-                Guardar Ticket
+                Guardar
               </button>
 
             </div>
@@ -168,19 +173,15 @@ export default function Tickets(){
 
 /* ===== ESTILOS ===== */
 
-const layout = {
-  display:"flex",
-  height:"100vh",
-  fontFamily:"Arial"
-};
+const layout = { display:"flex", height:"100vh" };
 
 const sidebar = {
-  width:"240px",
+  width:"230px",
   background:"#020617",
   color:"#fff",
+  padding:"20px",
   display:"flex",
   flexDirection:"column",
-  padding:"20px",
   gap:"10px"
 };
 
@@ -206,8 +207,7 @@ const logoutBtn = {
   border:"none",
   borderRadius:"8px",
   background:"#ef4444",
-  color:"#fff",
-  cursor:"pointer"
+  color:"#fff"
 };
 
 const content = {
@@ -240,6 +240,5 @@ const btn = {
   border:"none",
   borderRadius:"8px",
   background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
-  color:"#fff",
-  cursor:"pointer"
+  color:"#fff"
 };
