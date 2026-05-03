@@ -3,6 +3,9 @@ import axios from "axios";
 
 const API = "https://ticket-service-bo5t.onrender.com";
 
+/* 🔴 LISTA DE TÉCNICOS */
+const TECNICOS = ["Juan Pérez", "Ana Gómez", "Carlos Ruiz", "Laura Díaz"];
+
 export default function Tickets(){
 
   const [tickets,setTickets] = useState([]);
@@ -11,7 +14,7 @@ export default function Tickets(){
   const [form,setForm] = useState({
     titulo:"",
     descripcion:"",
-    tecnico:""
+    tecnico: TECNICOS[0] // valor por defecto
   });
 
   useEffect(()=>{ cargar(); },[]);
@@ -26,7 +29,7 @@ export default function Tickets(){
       ...form,
       estado:"abierto"
     });
-    setForm({titulo:"",descripcion:"",tecnico:""});
+    setForm({titulo:"",descripcion:"",tecnico:TECNICOS[0]});
     setView("list");
     cargar();
   };
@@ -36,12 +39,10 @@ export default function Tickets(){
     cargar();
   };
 
-  /* ===== EXPORTAR ===== */
   const exportar = ()=>{
     window.open(API + "/tickets/export");
   };
 
-  /* ===== IMPORTAR ===== */
   const importar = async (e)=>{
     const file = e.target.files[0];
     const formData = new FormData();
@@ -90,7 +91,6 @@ export default function Tickets(){
           <>
             <h2>Gestión de Tickets</h2>
 
-            {/* 🔴 ACCIONES */}
             <div style={{marginBottom:"15px", display:"flex", gap:"10px"}}>
               <button style={exportBtn} onClick={exportar}>
                 Exportar Excel
@@ -177,12 +177,16 @@ export default function Tickets(){
                 style={{...input, height:"100px"}}
               />
 
-              <input
-                placeholder="Técnico"
+              {/* 🔴 SELECT EN VEZ DE INPUT */}
+              <select
                 value={form.tecnico}
                 onChange={e=>setForm({...form,tecnico:e.target.value})}
                 style={input}
-              />
+              >
+                {TECNICOS.map(t=>(
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
 
               <button style={guardarBtn} onClick={crear}>
                 Guardar Ticket
