@@ -58,12 +58,11 @@ export default function Tickets(){
     cargar();
   };
 
-  // 🎨 COLORES CORPORATIVOS
   const estadoColor = (estado)=>{
     const e = estado.toLowerCase();
-    if(e==="abierto") return "#22c55e";   // VERDE
-    if(e==="en proceso") return "#3b82f6"; // AZUL
-    return "#ef4444"; // ROJO
+    if(e==="abierto") return "#22c55e";
+    if(e==="en proceso") return "#3b82f6";
+    return "#ef4444";
   };
 
   const logout = ()=>{
@@ -94,6 +93,7 @@ export default function Tickets(){
       {/* CONTENIDO */}
       <div style={content}>
 
+        {/* ================= LISTA ================= */}
         {view === "list" && (
           <>
             <h2>Gestión de Tickets</h2>
@@ -155,6 +155,7 @@ export default function Tickets(){
           </>
         )}
 
+        {/* ================= CREAR ================= */}
         {view === "create" && (
           <>
             <h2>Nuevo Ticket</h2>
@@ -187,6 +188,7 @@ export default function Tickets(){
           </>
         )}
 
+        {/* ================= BI ================= */}
         {view === "bi" && (
           <>
             <h2>Dashboard BI</h2>
@@ -195,6 +197,7 @@ export default function Tickets(){
 
             {!loadingBI && bi && (
               <>
+                {/* KPI */}
                 <div style={kpiContainer}>
                   <div style={kpiCard}>
                     <h4>Total</h4>
@@ -212,6 +215,35 @@ export default function Tickets(){
                   </div>
                 </div>
 
+                {/* 🔥 ETL PRO (SIN ROMPER NADA) */}
+                <div style={etlCard}>
+                  <div style={etlFlow}>
+                    <div style={etlStep}>
+                      <div style={{...etlCircle, background:"#3b82f6"}}>E</div>
+                      <span>Extract</span>
+                    </div>
+
+                    <div style={etlArrow}>→</div>
+
+                    <div style={etlStep}>
+                      <div style={{...etlCircle, background:"#22c55e"}}>T</div>
+                      <span>Transform</span>
+                    </div>
+
+                    <div style={etlArrow}>→</div>
+
+                    <div style={etlStep}>
+                      <div style={{...etlCircle, background:"#ef4444"}}>L</div>
+                      <span>Load</span>
+                    </div>
+                  </div>
+
+                  <p style={etlText}>
+                    Datos extraídos de tickets, transformados por tipo de incidencia y cargados en el modelo predictivo.
+                  </p>
+                </div>
+
+                {/* GRÁFICA */}
                 <div style={chartPro}>
                   {bi.distribucion.map((d,i)=>(
                     <div key={i} style={barContainer}>
@@ -268,6 +300,13 @@ const guardarBtn={background:"#3b82f6",color:"#fff",padding:"10px",border:"none"
 
 const kpiContainer={display:"flex",gap:"20px",marginBottom:"20px"};
 const kpiCard={background:"#1e293b",padding:"20px",borderRadius:"10px"};
+
+const etlCard={background:"#1e293b",padding:"15px",borderRadius:"12px",marginBottom:"20px"};
+const etlFlow={display:"flex",justifyContent:"center",alignItems:"center",gap:"20px"};
+const etlStep={display:"flex",flexDirection:"column",alignItems:"center"};
+const etlCircle={width:"40px",height:"40px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:"bold"};
+const etlArrow={fontSize:"20px",color:"#94a3b8"};
+const etlText={textAlign:"center",fontSize:"13px",opacity:0.8,marginTop:"10px"};
 
 const chartPro={display:"flex",gap:"30px",alignItems:"flex-end",background:"#1e293b",padding:"20px",borderRadius:"12px"};
 const barContainer={display:"flex",flexDirection:"column",alignItems:"center",gap:"5px"};
