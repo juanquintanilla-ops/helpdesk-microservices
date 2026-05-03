@@ -22,23 +22,24 @@ export default function Tickets(){
   };
 
   const crear = async ()=>{
-    await axios.post(API + "/tickets", form);
+    await axios.post(API + "/tickets", {
+      ...form,
+      estado:"abierto"
+    });
     setForm({titulo:"",descripcion:"",tecnico:""});
     setView("list");
     cargar();
   };
 
   const cambiarEstado = async (id, estado)=>{
-    console.log("CLICK", id, estado); // 👈 DEBUG
-
     await axios.put(API + "/tickets/" + id, { estado });
-
-    await cargar();
+    cargar();
   };
 
-  const colorEstado = (estado)=>{
-    if(estado==="Abierto") return "#22c55e";
-    if(estado==="En proceso") return "#f59e0b";
+  const estadoColor = (estado)=>{
+    const e = estado.toLowerCase();
+    if(e==="abierto") return "#22c55e";
+    if(e==="en proceso") return "#f59e0b";
     return "#ef4444";
   };
 
@@ -48,51 +49,38 @@ export default function Tickets(){
   };
 
   return (
-    <div style={{display:"flex", height:"100vh"}}>
+    <div style={layout}>
 
       {/* SIDEBAR */}
-      <div style={{
-        width:"230px",
-        background:"#020617",
-        color:"#fff",
-        padding:"20px",
-        display:"flex",
-        flexDirection:"column",
-        gap:"10px"
-      }}>
-        <h2 style={{
-          background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
-          WebkitBackgroundClip:"text",
-          WebkitTextFillColor:"transparent"
-        }}>
-          Nexus Pro
-        </h2>
+      <div style={sidebar}>
+        <h2 style={logo}>Nexus Pro</h2>
 
-        <button onClick={()=>setView("list")}>📋 Tickets</button>
-        <button onClick={()=>setView("create")}>➕ Crear</button>
+        <button style={menuBtn} onClick={()=>setView("list")}>
+          📋 Tickets
+        </button>
 
-        <button onClick={logout} style={{marginTop:"auto"}}>
+        <button style={menuBtn} onClick={()=>setView("create")}>
+          ➕ Crear Ticket
+        </button>
+
+        <button style={logoutBtn} onClick={logout}>
           Salir
         </button>
       </div>
 
       {/* CONTENIDO */}
-      <div style={{
-        flex:1,
-        padding:"20px",
-        background:"#0f172a",
-        color:"#fff"
-      }}>
+      <div style={content}>
 
         {view === "list" && (
           <>
-            <h2>Tickets</h2>
+            <h2>Gestión de Tickets</h2>
 
-            <table style={{width:"100%"}}>
+            <table style={table}>
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Título</th>
+                  <th>Descripción</th>
                   <th>Técnico</th>
                   <th>Estado</th>
                   <th>Acción</th>
@@ -104,44 +92,33 @@ export default function Tickets(){
                   <tr key={t.id}>
                     <td>{t.id}</td>
                     <td>{t.titulo}</td>
+                    <td>{t.descripcion}</td>
                     <td>{t.tecnico}</td>
 
                     <td>
                       <span style={{
-                        background:colorEstado(t.estado),
-                        padding:"6px 10px",
-                        borderRadius:"6px"
+                        background:estadoColor(t.estado),
+                        padding:"6px 12px",
+                        borderRadius:"20px",
+                        color:"#fff",
+                        fontSize:"12px"
                       }}>
                         {t.estado}
                       </span>
                     </td>
 
                     <td>
-                      {t.estado !== "Cerrado" ? (
+                      {t.estado.toLowerCase() !== "cerrado" ? (
                         <button
-                          style={{
-                            background:"#ef4444",
-                            color:"#fff",
-                            padding:"6px 12px",
-                            border:"none",
-                            borderRadius:"6px",
-                            cursor:"pointer"
-                          }}
-                          onClick={()=>cambiarEstado(t.id,"Cerrado")}
+                          style={cerrarBtn}
+                          onClick={()=>cambiarEstado(t.id,"cerrado")}
                         >
                           Cerrar
                         </button>
                       ) : (
                         <button
-                          style={{
-                            background:"#22c55e",
-                            color:"#fff",
-                            padding:"6px 12px",
-                            border:"none",
-                            borderRadius:"6px",
-                            cursor:"pointer"
-                          }}
-                          onClick={()=>cambiarEstado(t.id,"Abierto")}
+                          style={reabrirBtn}
+                          onClick={()=>cambiarEstado(t.id,"abierto")}
                         >
                           Reabrir
                         </button>
@@ -158,19 +135,32 @@ export default function Tickets(){
           <>
             <h2>Nuevo Ticket</h2>
 
-            <input placeholder="Título"
-              value={form.titulo}
-              onChange={e=>setForm({...form,titulo:e.target.value})}/>
+            <div style={formBox}>
+              <input
+                placeholder="Título"
+                value={form.titulo}
+                onChange={e=>setForm({...form,titulo:e.target.value})}
+                style={input}
+              />
 
-            <textarea placeholder="Descripción"
-              value={form.descripcion}
-              onChange={e=>setForm({...form,descripcion:e.target.value})}/>
+              <textarea
+                placeholder="Descripción"
+                value={form.descripcion}
+                onChange={e=>setForm({...form,descripcion:e.target.value})}
+                style={{...input, height:"100px"}}
+              />
 
-            <input placeholder="Técnico"
-              value={form.tecnico}
-              onChange={e=>setForm({...form,tecnico:e.target.value})}/>
+              <input
+                placeholder="Técnico"
+                value={form.tecnico}
+                onChange={e=>setForm({...form,tecnico:e.target.value})}
+                style={input}
+              />
 
-            <button onClick={crear}>Guardar</button>
+              <button style={guardarBtn} onClick={crear}>
+                Guardar Ticket
+              </button>
+            </div>
           </>
         )}
 
@@ -178,3 +168,99 @@ export default function Tickets(){
     </div>
   );
 }
+
+/* ===== ESTILOS ===== */
+
+const layout = {
+  display:"flex",
+  height:"100vh"
+};
+
+const sidebar = {
+  width:"240px",
+  background:"#020617",
+  padding:"20px",
+  display:"flex",
+  flexDirection:"column",
+  gap:"15px",
+  color:"#fff"
+};
+
+const logo = {
+  fontSize:"22px",
+  fontWeight:"bold",
+  background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
+  WebkitBackgroundClip:"text",
+  WebkitTextFillColor:"transparent"
+};
+
+const menuBtn = {
+  padding:"12px",
+  borderRadius:"10px",
+  border:"none",
+  background:"#1e293b",
+  color:"#fff",
+  cursor:"pointer"
+};
+
+const logoutBtn = {
+  marginTop:"auto",
+  padding:"12px",
+  background:"#ef4444",
+  border:"none",
+  borderRadius:"10px",
+  color:"#fff",
+  cursor:"pointer"
+};
+
+const content = {
+  flex:1,
+  padding:"25px",
+  background:"#0f172a",
+  color:"#fff"
+};
+
+const table = {
+  width:"100%",
+  borderCollapse:"collapse"
+};
+
+const cerrarBtn = {
+  background:"#ef4444",
+  color:"#fff",
+  padding:"6px 12px",
+  border:"none",
+  borderRadius:"8px",
+  cursor:"pointer"
+};
+
+const reabrirBtn = {
+  background:"#22c55e",
+  color:"#fff",
+  padding:"6px 12px",
+  border:"none",
+  borderRadius:"8px",
+  cursor:"pointer"
+};
+
+const formBox = {
+  display:"flex",
+  flexDirection:"column",
+  gap:"10px",
+  maxWidth:"400px"
+};
+
+const input = {
+  padding:"10px",
+  borderRadius:"8px",
+  border:"none"
+};
+
+const guardarBtn = {
+  background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
+  color:"#fff",
+  padding:"10px",
+  border:"none",
+  borderRadius:"10px",
+  cursor:"pointer"
+};
