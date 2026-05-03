@@ -25,7 +25,7 @@ db.serialize(() => {
   `);
 });
 
-/* ===== DEBUG ===== */
+/* ===== TEST ===== */
 app.get("/ping", (req,res)=>res.send("pong"));
 
 /* ===== GET ===== */
@@ -36,14 +36,14 @@ app.get("/tickets", (req, res) => {
   });
 });
 
-/* ===== POST ===== */
+/* ===== CREATE ===== */
 app.post("/tickets", (req, res) => {
   const { titulo, descripcion, tecnico } = req.body;
 
   db.run(
     `INSERT INTO tickets (titulo, descripcion, tecnico, estado)
      VALUES (?,?,?,?)`,
-    [titulo, descripcion, tecnico, "Abierto"],
+    [titulo, descripcion, tecnico, "abierto"], // 🔴 siempre minúscula
     function (err) {
       if (err) return res.status(500).send(err);
       res.json({ id: this.lastID });
@@ -51,26 +51,19 @@ app.post("/tickets", (req, res) => {
   );
 });
 
-/* 🔴 UPDATE (CLAVE REAL) */
+/* ===== UPDATE (ARREGLADO) ===== */
 app.put("/tickets/:id", (req, res) => {
   const id = parseInt(req.params.id);
-  const { estado } = req.body;
-
-  console.log("UPDATE ->", id, estado); // 👈 LOG
+  const estado = req.body.estado.toLowerCase();
 
   db.run(
     `UPDATE tickets SET estado = ? WHERE id = ?`,
     [estado, id],
     function (err) {
-      if (err) {
-        console.log("ERROR UPDATE", err);
-        return res.status(500).send(err);
-      }
-
-      console.log("CHANGES:", this.changes); // 👈 LOG
+      if (err) return res.status(500).send(err);
 
       if (this.changes === 0) {
-        return res.status(404).send("Ticket no encontrado");
+        return res.status(404).send("No actualizado");
       }
 
       res.json({ ok: true });
@@ -108,7 +101,12 @@ app.post("/tickets/import", upload.single("file"), (req, res) => {
     db.run(
       `INSERT INTO tickets (titulo, descripcion, tecnico, estado)
        VALUES (?,?,?,?)`,
-      [row.Titulo, row.Descripcion, row.Tecnico, row.Estado || "Abierto"]
+      [
+        row.Titulo,
+        row.Descripcion,
+        row.Tecnico,
+        (row.Estado || "abierto").toLowerCase()
+      ]
     );
   });
 
