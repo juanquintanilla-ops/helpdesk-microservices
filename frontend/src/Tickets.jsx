@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 const API = "https://ticket-service-bo5t.onrender.com";
+const BI_API = "https://bi-service-h7ei.onrender.com";
 
-/* 🔴 LISTA DE TÉCNICOS */
 const TECNICOS = ["Juan Pérez", "Ana Gómez", "Carlos Ruiz", "Laura Díaz"];
 
 export default function Tickets(){
 
   const [tickets,setTickets] = useState([]);
   const [view,setView] = useState("list");
+  const [bi,setBi] = useState(null);
 
   const [form,setForm] = useState({
     titulo:"",
     descripcion:"",
-    tecnico: TECNICOS[0] // valor por defecto
+    tecnico: TECNICOS[0]
   });
 
   useEffect(()=>{ cargar(); },[]);
@@ -22,6 +23,11 @@ export default function Tickets(){
   const cargar = async ()=>{
     const res = await axios.get(API + "/tickets");
     setTickets(res.data);
+  };
+
+  const cargarBI = async ()=>{
+    const res = await axios.get(BI_API + "/bi/prediccion");
+    setBi(res.data);
   };
 
   const crear = async ()=>{
@@ -39,15 +45,12 @@ export default function Tickets(){
     cargar();
   };
 
-  const exportar = ()=>{
-    window.open(API + "/tickets/export");
-  };
+  const exportar = ()=> window.open(API + "/tickets/export");
 
   const importar = async (e)=>{
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
-
     await axios.post(API + "/tickets/import", formData);
     cargar();
   };
@@ -79,6 +82,10 @@ export default function Tickets(){
           ➕ Crear Ticket
         </button>
 
+        <button style={menuBtn} onClick={()=>{setView("bi"); cargarBI();}}>
+          📊 BI
+        </button>
+
         <button style={logoutBtn} onClick={logout}>
           Salir
         </button>
@@ -87,14 +94,13 @@ export default function Tickets(){
       {/* CONTENIDO */}
       <div style={content}>
 
+        {/* ===== TICKETS ===== */}
         {view === "list" && (
           <>
             <h2>Gestión de Tickets</h2>
 
             <div style={{marginBottom:"15px", display:"flex", gap:"10px"}}>
-              <button style={exportBtn} onClick={exportar}>
-                Exportar Excel
-              </button>
+              <button style={exportBtn} onClick={exportar}>Exportar Excel</button>
 
               <label style={importBtn}>
                 Importar Excel
@@ -127,8 +133,7 @@ export default function Tickets(){
                         background:estadoColor(t.estado),
                         padding:"6px 12px",
                         borderRadius:"20px",
-                        color:"#fff",
-                        fontSize:"12px"
+                        color:"#fff"
                       }}>
                         {t.estado}
                       </span>
@@ -136,17 +141,13 @@ export default function Tickets(){
 
                     <td>
                       {t.estado.toLowerCase() !== "cerrado" ? (
-                        <button
-                          style={cerrarBtn}
-                          onClick={()=>cambiarEstado(t.id,"cerrado")}
-                        >
+                        <button style={cerrarBtn}
+                          onClick={()=>cambiarEstado(t.id,"cerrado")}>
                           Cerrar
                         </button>
                       ) : (
-                        <button
-                          style={reabrirBtn}
-                          onClick={()=>cambiarEstado(t.id,"abierto")}
-                        >
+                        <button style={reabrirBtn}
+                          onClick={()=>cambiarEstado(t.id,"abierto")}>
                           Reabrir
                         </button>
                       )}
@@ -158,39 +159,65 @@ export default function Tickets(){
           </>
         )}
 
+        {/* ===== CREAR ===== */}
         {view === "create" && (
           <>
             <h2>Nuevo Ticket</h2>
 
             <div style={formBox}>
-              <input
-                placeholder="Título"
+              <input placeholder="Título"
                 value={form.titulo}
                 onChange={e=>setForm({...form,titulo:e.target.value})}
-                style={input}
-              />
+                style={input}/>
 
-              <textarea
-                placeholder="Descripción"
+              <textarea placeholder="Descripción"
                 value={form.descripcion}
                 onChange={e=>setForm({...form,descripcion:e.target.value})}
-                style={{...input, height:"100px"}}
-              />
+                style={{...input,height:"100px"}}/>
 
-              {/* 🔴 SELECT EN VEZ DE INPUT */}
-              <select
-                value={form.tecnico}
+              <select value={form.tecnico}
                 onChange={e=>setForm({...form,tecnico:e.target.value})}
-                style={input}
-              >
-                {TECNICOS.map(t=>(
-                  <option key={t} value={t}>{t}</option>
-                ))}
+                style={input}>
+                {TECNICOS.map(t=><option key={t}>{t}</option>)}
               </select>
 
               <button style={guardarBtn} onClick={crear}>
                 Guardar Ticket
               </button>
+            </div>
+          </>
+        )}
+
+        {/* ===== BI ===== */}
+        {view === "bi" && bi && (
+          <>
+            <h2>Business Intelligence</h2>
+
+            {/* ETL visible */}
+            <div style={etlBox}>
+              <p><b>Extract:</b> Datos de tickets</p>
+              <p><b>Transform:</b> Agrupación por tipo de falla</p>
+              <p><b>Load:</b> Modelo predictivo simple</p>
+            </div>
+
+            <h3>Predicción próxima falla:</h3>
+            <h1 style={{color:"#3b82f6"}}>
+              {bi.prediccion}
+            </h1>
+
+            {/* GRÁFICO */}
+            <div style={chart}>
+              {bi.distribucion.map((d,i)=>(
+                <div key={i} style={{textAlign:"center"}}>
+                  <div style={{
+                    height: d.total * 20,
+                    width:"40px",
+                    background:"#22c55e",
+                    margin:"auto"
+                  }}></div>
+                  <p>{d.tipo}</p>
+                </div>
+              ))}
             </div>
           </>
         )}
@@ -201,108 +228,19 @@ export default function Tickets(){
 }
 
 /* ===== ESTILOS ===== */
-
-const layout = { display:"flex", height:"100vh" };
-
-const sidebar = {
-  width:"240px",
-  background:"#020617",
-  padding:"20px",
-  display:"flex",
-  flexDirection:"column",
-  gap:"15px",
-  color:"#fff"
-};
-
-const logo = {
-  fontSize:"22px",
-  fontWeight:"bold",
-  background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
-  WebkitBackgroundClip:"text",
-  WebkitTextFillColor:"transparent"
-};
-
-const menuBtn = {
-  padding:"12px",
-  borderRadius:"10px",
-  border:"none",
-  background:"#1e293b",
-  color:"#fff",
-  cursor:"pointer"
-};
-
-const logoutBtn = {
-  marginTop:"auto",
-  padding:"12px",
-  background:"#ef4444",
-  border:"none",
-  borderRadius:"10px",
-  color:"#fff",
-  cursor:"pointer"
-};
-
-const content = {
-  flex:1,
-  padding:"25px",
-  background:"#0f172a",
-  color:"#fff"
-};
-
-const table = { width:"100%", borderCollapse:"collapse" };
-
-const cerrarBtn = {
-  background:"#ef4444",
-  color:"#fff",
-  padding:"6px 12px",
-  border:"none",
-  borderRadius:"8px",
-  cursor:"pointer"
-};
-
-const reabrirBtn = {
-  background:"#22c55e",
-  color:"#fff",
-  padding:"6px 12px",
-  border:"none",
-  borderRadius:"8px",
-  cursor:"pointer"
-};
-
-const formBox = {
-  display:"flex",
-  flexDirection:"column",
-  gap:"10px",
-  maxWidth:"400px"
-};
-
-const input = {
-  padding:"10px",
-  borderRadius:"8px",
-  border:"none"
-};
-
-const guardarBtn = {
-  background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",
-  color:"#fff",
-  padding:"10px",
-  border:"none",
-  borderRadius:"10px",
-  cursor:"pointer"
-};
-
-const exportBtn = {
-  background:"#3b82f6",
-  color:"#fff",
-  padding:"8px 12px",
-  border:"none",
-  borderRadius:"8px",
-  cursor:"pointer"
-};
-
-const importBtn = {
-  background:"#22c55e",
-  color:"#fff",
-  padding:"8px 12px",
-  borderRadius:"8px",
-  cursor:"pointer"
-};
+const layout={display:"flex",height:"100vh"};
+const sidebar={width:"240px",background:"#020617",padding:"20px",display:"flex",flexDirection:"column",gap:"10px",color:"#fff"};
+const logo={fontSize:"22px",background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"};
+const menuBtn={padding:"10px",background:"#1e293b",color:"#fff",border:"none",borderRadius:"8px"};
+const logoutBtn={marginTop:"auto",background:"#ef4444",color:"#fff",padding:"10px",border:"none"};
+const content={flex:1,padding:"20px",background:"#0f172a",color:"#fff"};
+const table={width:"100%"};
+const cerrarBtn={background:"#ef4444",color:"#fff"};
+const reabrirBtn={background:"#22c55e",color:"#fff"};
+const formBox={display:"flex",flexDirection:"column",gap:"10px"};
+const input={padding:"10px"};
+const guardarBtn={background:"#3b82f6",color:"#fff"};
+const exportBtn={background:"#3b82f6",color:"#fff"};
+const importBtn={background:"#22c55e",color:"#fff",padding:"5px"};
+const etlBox={background:"#1e293b",padding:"15px",borderRadius:"10px"};
+const chart={display:"flex",gap:"20px",alignItems:"end",marginTop:"20px"};
