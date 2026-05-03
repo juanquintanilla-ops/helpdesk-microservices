@@ -27,16 +27,10 @@ export default function Tickets(){
   };
 
   const cargarBI = async ()=>{
-    try{
-      setLoadingBI(true);
-      const res = await axios.get(BI_API + "/bi/prediccion");
-      setBi(res.data);
-    }catch(e){
-      console.error(e);
-      setBi(null);
-    }finally{
-      setLoadingBI(false);
-    }
+    setLoadingBI(true);
+    const res = await axios.get(BI_API + "/bi/prediccion");
+    setBi(res.data);
+    setLoadingBI(false);
   };
 
   const crear = async ()=>{
@@ -64,11 +58,12 @@ export default function Tickets(){
     cargar();
   };
 
+  // 🎨 COLORES CORPORATIVOS
   const estadoColor = (estado)=>{
     const e = estado.toLowerCase();
-    if(e==="abierto") return "#22c55e";
-    if(e==="en proceso") return "#f59e0b";
-    return "#ef4444";
+    if(e==="abierto") return "#22c55e";   // VERDE
+    if(e==="en proceso") return "#3b82f6"; // AZUL
+    return "#ef4444"; // ROJO
   };
 
   const logout = ()=>{
@@ -113,7 +108,7 @@ export default function Tickets(){
 
             <table style={table}>
               <thead>
-                <tr>
+                <tr style={{background:"#1e293b"}}>
                   <th>ID</th>
                   <th>Título</th>
                   <th>Descripción</th>
@@ -125,7 +120,7 @@ export default function Tickets(){
 
               <tbody>
                 {tickets.map(t=>(
-                  <tr key={t.id}>
+                  <tr key={t.id} style={{borderBottom:"1px solid #1e293b"}}>
                     <td>{t.id}</td>
                     <td>{t.titulo}</td>
                     <td>{t.descripcion}</td>
@@ -202,7 +197,7 @@ export default function Tickets(){
               <>
                 <div style={kpiContainer}>
                   <div style={kpiCard}>
-                    <h4>Total Tickets</h4>
+                    <h4>Total</h4>
                     <h1>{bi.total}</h1>
                   </div>
 
@@ -213,17 +208,8 @@ export default function Tickets(){
 
                   <div style={kpiCard}>
                     <h4>Predicción</h4>
-                    <p style={{fontWeight:"bold"}}>
-                      {bi.prediccion}
-                    </p>
+                    <p>{bi.prediccion}</p>
                   </div>
-                </div>
-
-                <div style={etlBox}>
-                  <b>Proceso ETL:</b><br/>
-                  Extract → Tickets<br/>
-                  Transform → Agrupación por tipo<br/>
-                  Load → Predicción
                 </div>
 
                 <div style={chartPro}>
@@ -255,13 +241,15 @@ export default function Tickets(){
   );
 }
 
-/* ESTILOS */
+/* 🎨 ESTILOS */
 
 const layout={display:"flex",height:"100vh"};
 const sidebar={width:"240px",background:"#020617",padding:"20px",display:"flex",flexDirection:"column",gap:"10px",color:"#fff"};
 const logo={fontSize:"22px",background:"linear-gradient(90deg,#ef4444,#22c55e,#3b82f6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"};
+
 const menuBtn={padding:"10px",background:"#1e293b",color:"#fff",border:"none",borderRadius:"8px"};
 const logoutBtn={marginTop:"auto",background:"#ef4444",color:"#fff",padding:"10px",border:"none"};
+
 const content={flex:1,padding:"20px",background:"#0f172a",color:"#fff"};
 
 const table={width:"100%",borderCollapse:"collapse"};
@@ -280,8 +268,6 @@ const guardarBtn={background:"#3b82f6",color:"#fff",padding:"10px",border:"none"
 
 const kpiContainer={display:"flex",gap:"20px",marginBottom:"20px"};
 const kpiCard={background:"#1e293b",padding:"20px",borderRadius:"10px"};
-
-const etlBox={background:"#1e293b",padding:"15px",borderRadius:"10px",marginBottom:"20px"};
 
 const chartPro={display:"flex",gap:"30px",alignItems:"flex-end",background:"#1e293b",padding:"20px",borderRadius:"12px"};
 const barContainer={display:"flex",flexDirection:"column",alignItems:"center",gap:"5px"};
