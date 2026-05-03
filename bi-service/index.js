@@ -16,7 +16,8 @@ app.get("/bi/prediccion", async (req,res)=>{
     if(!tickets || tickets.length === 0){
       return res.json({
         total: 0,
-        prediccion: "Sin datos",
+        prediccion: "No hay datos suficientes",
+        tendencia: "Sin tendencia",
         distribucion: []
       });
     }
@@ -34,13 +35,17 @@ app.get("/bi/prediccion", async (req,res)=>{
       total:conteo[k]
     }));
 
-    const prediccion = Object.keys(conteo)
+    const top = Object.keys(conteo)
       .sort((a,b)=>conteo[b]-conteo[a])[0];
 
-    // 🔥 AQUÍ ESTÁ LA CLAVE
+    const tendencia = tickets.length > 5
+      ? "Alta demanda de soporte"
+      : "Demanda estable";
+
     res.json({
       total: tickets.length,
-      prediccion,
+      prediccion: `Posible próxima incidencia: ${top}`,
+      tendencia,
       distribucion
     });
 
@@ -48,7 +53,8 @@ app.get("/bi/prediccion", async (req,res)=>{
     console.error(err);
     res.status(500).json({
       total: 0,
-      prediccion: "Error",
+      prediccion: "Error en BI",
+      tendencia: "Error",
       distribucion: []
     });
   }
@@ -56,4 +62,4 @@ app.get("/bi/prediccion", async (req,res)=>{
 });
 
 const PORT = process.env.PORT || 3002;
-app.listen(PORT, ()=>console.log("BI listo"));
+app.listen(PORT, ()=>console.log("BI listo en puerto " + PORT));

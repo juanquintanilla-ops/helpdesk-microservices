@@ -99,7 +99,6 @@ export default function Tickets(){
       {/* CONTENIDO */}
       <div style={content}>
 
-        {/* ================= TICKETS ================= */}
         {view === "list" && (
           <>
             <h2>Gestión de Tickets</h2>
@@ -142,23 +141,17 @@ export default function Tickets(){
                     </td>
 
                     <td>
-                      <div style={btnGroup}>
-                        {t.estado.toLowerCase() !== "cerrado" ? (
-                          <button
-                            style={cerrarBtn}
-                            onClick={()=>cambiarEstado(t.id,"cerrado")}
-                          >
-                            Cerrar
-                          </button>
-                        ) : (
-                          <button
-                            style={reabrirBtn}
-                            onClick={()=>cambiarEstado(t.id,"abierto")}
-                          >
-                            Reabrir
-                          </button>
-                        )}
-                      </div>
+                      {t.estado.toLowerCase() !== "cerrado" ? (
+                        <button style={cerrarBtn}
+                          onClick={()=>cambiarEstado(t.id,"cerrado")}>
+                          Cerrar
+                        </button>
+                      ) : (
+                        <button style={reabrirBtn}
+                          onClick={()=>cambiarEstado(t.id,"abierto")}>
+                          Reabrir
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -167,21 +160,18 @@ export default function Tickets(){
           </>
         )}
 
-        {/* ================= CREAR ================= */}
         {view === "create" && (
           <>
             <h2>Nuevo Ticket</h2>
 
             <div style={formBox}>
-              <input
-                placeholder="Título"
+              <input placeholder="Título"
                 value={form.titulo}
                 onChange={e=>setForm({...form,titulo:e.target.value})}
                 style={input}
               />
 
-              <textarea
-                placeholder="Descripción"
+              <textarea placeholder="Descripción"
                 value={form.descripcion}
                 onChange={e=>setForm({...form,descripcion:e.target.value})}
                 style={{...input,height:"100px"}}
@@ -202,48 +192,56 @@ export default function Tickets(){
           </>
         )}
 
-        {/* ================= BI ================= */}
         {view === "bi" && (
           <>
             <h2>Dashboard BI</h2>
 
             {loadingBI && <p>Cargando BI...</p>}
 
-            {!loadingBI && !bi && (
-              <p>No hay datos disponibles</p>
-            )}
-
             {!loadingBI && bi && (
               <>
-                {/* KPI */}
                 <div style={kpiContainer}>
                   <div style={kpiCard}>
-                    <h3>Total Tickets</h3>
+                    <h4>Total Tickets</h4>
                     <h1>{bi.total}</h1>
                   </div>
 
                   <div style={kpiCard}>
-                    <h3>Más frecuente</h3>
-                    <h1>{bi.prediccion}</h1>
+                    <h4>Tendencia</h4>
+                    <h2>{bi.tendencia}</h2>
+                  </div>
+
+                  <div style={kpiCard}>
+                    <h4>Predicción</h4>
+                    <p style={{fontWeight:"bold"}}>
+                      {bi.prediccion}
+                    </p>
                   </div>
                 </div>
 
-                {/* ETL */}
                 <div style={etlBox}>
-                  <b>ETL:</b> Extracción → Transformación → Predicción
+                  <b>Proceso ETL:</b><br/>
+                  Extract → Tickets<br/>
+                  Transform → Agrupación por tipo<br/>
+                  Load → Predicción
                 </div>
 
-                {/* GRÁFICO */}
-                <div style={chart}>
+                <div style={chartPro}>
                   {bi.distribucion.map((d,i)=>(
-                    <div key={i} style={barItem}>
+                    <div key={i} style={barContainer}>
                       <div style={{
-                        height: d.total * 30,
-                        width:"40px",
-                        background:"#3b82f6",
-                        borderRadius:"6px"
-                      }}></div>
-                      <small>{d.tipo}</small>
+                        height: d.total * 40,
+                        width:"50px",
+                        background:"linear-gradient(180deg,#3b82f6,#22c55e)",
+                        borderRadius:"10px 10px 0 0",
+                        color:"#fff",
+                        display:"flex",
+                        alignItems:"flex-end",
+                        justifyContent:"center"
+                      }}>
+                        {d.total}
+                      </div>
+                      <span>{d.tipo}</span>
                     </div>
                   ))}
                 </div>
@@ -257,7 +255,7 @@ export default function Tickets(){
   );
 }
 
-/* ===== ESTILOS ===== */
+/* ESTILOS */
 
 const layout={display:"flex",height:"100vh"};
 const sidebar={width:"240px",background:"#020617",padding:"20px",display:"flex",flexDirection:"column",gap:"10px",color:"#fff"};
@@ -269,7 +267,6 @@ const content={flex:1,padding:"20px",background:"#0f172a",color:"#fff"};
 const table={width:"100%",borderCollapse:"collapse"};
 const badge={padding:"6px 10px",borderRadius:"20px",color:"#fff",fontSize:"12px"};
 
-const btnGroup={display:"flex",justifyContent:"center"};
 const cerrarBtn={background:"#ef4444",color:"#fff",padding:"6px 12px",border:"none",borderRadius:"6px"};
 const reabrirBtn={background:"#22c55e",color:"#fff",padding:"6px 12px",border:"none",borderRadius:"6px"};
 
@@ -284,7 +281,7 @@ const guardarBtn={background:"#3b82f6",color:"#fff",padding:"10px",border:"none"
 const kpiContainer={display:"flex",gap:"20px",marginBottom:"20px"};
 const kpiCard={background:"#1e293b",padding:"20px",borderRadius:"10px"};
 
-const etlBox={background:"#1e293b",padding:"10px",marginBottom:"20px"};
+const etlBox={background:"#1e293b",padding:"15px",borderRadius:"10px",marginBottom:"20px"};
 
-const chart={display:"flex",gap:"20px",alignItems:"end"};
-const barItem={textAlign:"center"};
+const chartPro={display:"flex",gap:"30px",alignItems:"flex-end",background:"#1e293b",padding:"20px",borderRadius:"12px"};
+const barContainer={display:"flex",flexDirection:"column",alignItems:"center",gap:"5px"};
