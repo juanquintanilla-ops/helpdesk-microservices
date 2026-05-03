@@ -51,6 +51,21 @@ app.post("/tickets", (req, res) => {
   );
 });
 
+/* ===== UPDATE ESTADO ===== */
+
+app.put("/tickets/:id", (req, res) => {
+  const { estado } = req.body;
+
+  db.run(
+    `UPDATE tickets SET estado = ? WHERE id = ?`,
+    [estado, req.params.id],
+    function (err) {
+      if (err) return res.status(500).send(err);
+      res.send("Actualizado");
+    }
+  );
+});
+
 /* ===== EXPORT EXCEL ===== */
 
 app.get("/tickets/export", (req, res) => {
@@ -58,7 +73,6 @@ app.get("/tickets/export", (req, res) => {
     if (err) return res.status(500).send(err);
 
     const data = rows.map(t => ({
-      ID: t.id,
       Titulo: t.titulo,
       Descripcion: t.descripcion,
       Tecnico: t.tecnico,

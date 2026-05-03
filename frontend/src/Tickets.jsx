@@ -38,13 +38,17 @@ export default function Tickets(){
     cargar();
   };
 
+  const cambiarEstado = async (id, estado)=>{
+    await axios.put(API + "/tickets/" + id, { estado });
+    cargar();
+  };
+
   const exportar = ()=>{
     window.open(API + "/tickets/export");
   };
 
   const importar = async (e)=>{
     const file = e.target.files[0];
-
     const formData = new FormData();
     formData.append("file", file);
 
@@ -113,7 +117,22 @@ export default function Tickets(){
                     <td>{t.titulo}</td>
                     <td>{t.descripcion}</td>
                     <td>{t.tecnico}</td>
-                    <td>{t.estado}</td>
+                    <td>
+                      {t.estado}
+                      <br/>
+
+                      {t.estado !== "Cerrado" && (
+                        <button onClick={()=>cambiarEstado(t.id,"Cerrado")}>
+                          Cerrar
+                        </button>
+                      )}
+
+                      {t.estado === "Cerrado" && (
+                        <button onClick={()=>cambiarEstado(t.id,"Abierto")}>
+                          Reabrir
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
